@@ -82,7 +82,7 @@
                 setError(null);
                 try {
                     // Make sure to replace this URL with your actual Render URL when deployed
-                    const apiUrl = `https://ishop-api.onrender.com/scrape?city=${city}&checkin=${checkIn}&checkout=${checkOut}`;
+                    const apiUrl = `https://ishop-api-ukla.onrender.com/scrape?city=${city}&checkin=${checkIn}&checkout=${checkOut}`;
                     const response = await fetch(apiUrl);
                     const data = await response.json();
                     
