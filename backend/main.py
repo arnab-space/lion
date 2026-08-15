@@ -7,6 +7,7 @@ import asyncio
 
 app = FastAPI()
 
+# Allow frontend to communicate with this backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
@@ -15,9 +16,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load the database we just generated
-with open('city_database.json', 'r') as f:
-    CITY_DATABASE = json.load(f)
+# Load the city database on startup
+try:
+    with open('city_database.json', 'r') as f:
+        CITY_DATABASE = json.load(f)
+except FileNotFoundError:
+    print("Warning: city_database.json not found. Make sure it is uploaded.")
+    CITY_DATABASE = {}
 
 def generate_ishop_url(city_key, check_in, check_out):
     if city_key not in CITY_DATABASE:
@@ -29,19 +34,25 @@ def generate_ishop_url(city_key, check_in, check_out):
     state_encoded = urllib.parse.quote(data.get("state", ""))
     country_name_encoded = urllib.parse.quote(data.get("countryName", ""))
     loc_name_encoded = urllib.parse.quote(data.get("loc_name", ""))
+    city_encoded = urllib.parse.quote(data.get("city", ""))
     
     url = (
         f"https://www.ishoprewards.com/hotels/hotel-list?"
         f"checkIn={check_in}&checkOut={check_out}&noOfRooms=1"
-        f"&city={urllib.parse.quote(data['city'])}&country={data['country']}&countryName={country_name_encoded}"
+        f"&city={city_encoded}&country={data.get('country', '')}&countryName={country_name_encoded}"
         f"&state={state_encoded}&scr=INR&sct=IN&room%5B0%5D=1"
         f"&numberOfAdults%5B0%5D=2&numberOfChildren%5B0%5D=0&childrenAge%5B0%5D="
-        f"&channel=web&locationSuggestion.id={data['loc_id']}"
-        f"&locationSuggestion.name={loc_name_encoded}&locationSuggestion.type={data['loc_type']}"
-        f"&cachedContent=true&latitude={data['lat']}&longitude={data['lon']}"
+        f"&channel=web&locationSuggestion.id={data.get('loc_id', '')}"
+        f"&locationSuggestion.name={loc_name_encoded}&locationSuggestion.type={data.get('loc_type', '')}"
+        f"&cachedContent=true&latitude={data.get('lat', '')}&longitude={data.get('lon', '')}"
         f"&numberOfRooms=1&totalGuest=2&selectedAges="
     )
     return url
+
+# Root endpoint to clear the 404 error in Render logs
+@app.get("/")
+async def root():
+    return {"status": "online", "message": "iShop Scraper API is actively running."}
 
 @app.get("/scrape")
 async def scrape_city(city: str, checkin: str, checkout: str):
@@ -53,7 +64,11 @@ async def scrape_city(city: str, checkin: str, checkout: str):
     async with async_playwright() as p:
         browser = await p.chromium.launch(
             headless=True,
-            args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"] 
+            args=[
+                "--no-sandbox", 
+                "--disable-setuid-sandbox", 
+                "--disable-dev-shm-usage"
+            ] 
         )
         context = await browser.new_context()
         page = await context.new_page()
@@ -61,6 +76,7 @@ async def scrape_city(city: str, checkin: str, checkout: str):
         captured_data = {"status": "failed", "hotels": []}
         
         async def handle_response(response):
+            # Intercept the POST request that returns the actual hotel JSON data
             if "listing" in response.url.lower() and response.request.method == "POST":
                 try:
                     json_data = await response.json()
@@ -72,9 +88,11 @@ async def scrape_city(city: str, checkin: str, checkout: str):
 
         page.on("response", handle_response)
         
-        # Navigate directly to the fully constructed URL
+        # Navigate directly to the fully constructed URL (bypassing UI automation)
         await page.goto(target_url, wait_until="domcontentloaded")
-        await asyncio.sleep(10) # Wait for the POST request to trigger and be captured
+        
+        # Wait for the POST request to trigger and be captured by our interceptor
+        await asyncio.sleep(10) 
         
         await browser.close()
         return captured_data
