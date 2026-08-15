@@ -67,20 +67,26 @@ async def scrape_city(city: str, checkin: str, checkout: str):
                     "--disable-dev-shm-usage",
                     "--single-process", 
                     "--no-zygote",
-                    "--disable-blink-features=AutomationControlled" # Restored Anti-Bot Flag
+                    "--disable-blink-features=AutomationControlled"
                 ] 
             )
             
-            # Restored your exact User-Agent and stealth scripts
-            context = await browser.new_context(
-                viewport={"width": 1440, "height": 900},
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-            )
+            # HARDCODED PROXY & ANTI-BOT HEADERS
+            context_args = {
+                "viewport": {"width": 1440, "height": 900},
+                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                "proxy": {
+                    "server": "http://31.59.20.176:6754",
+                    "username": "zggsvjkj",
+                    "password": "fueqpv8tcjco"
+                }
+            }
+            
+            context = await browser.new_context(**context_args)
             await context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             
             page = await context.new_page()
             
-            # Explicit error message to send to your UI if interception fails
             captured_data = {"status": "failed", "error": "Bot detected or page loaded too slowly.", "hotels": []}
             
             async def handle_response(response):
@@ -97,8 +103,6 @@ async def scrape_city(city: str, checkin: str, checkout: str):
             page.on("response", handle_response)
             
             await page.goto(target_url, wait_until="domcontentloaded")
-            
-            # Increased cloud wait time to 15 seconds
             await asyncio.sleep(15) 
             
             await browser.close()
