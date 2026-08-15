@@ -1,3 +1,5 @@
 fastapi
 uvicorn
-curl-cffi
+playwright==1.62.0
+pandas
+openpyxl
