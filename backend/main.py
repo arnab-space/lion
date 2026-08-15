@@ -1,11 +1,9 @@
-import os
 import json
-import urllib.parse
+import uuid
+import httpx
+import traceback
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from playwright.async_api import async_playwright
-import asyncio
-import traceback
 
 app = FastAPI()
 
@@ -21,106 +19,82 @@ try:
     with open('city_database.json', 'r') as f:
         CITY_DATABASE = json.load(f)
 except FileNotFoundError:
-    print("Warning: city_database.json not found.")
     CITY_DATABASE = {}
-
-def generate_ishop_url(city_key, check_in, check_out):
-    if city_key not in CITY_DATABASE:
-        return None
-        
-    data = CITY_DATABASE[city_key]
-    state_encoded = urllib.parse.quote(data.get("state", ""))
-    country_name_encoded = urllib.parse.quote(data.get("countryName", ""))
-    loc_name_encoded = urllib.parse.quote(data.get("loc_name", ""))
-    city_encoded = urllib.parse.quote(data.get("city", ""))
-    
-    url = (
-        f"https://www.ishoprewards.com/hotels/hotel-list?"
-        f"checkIn={check_in}&checkOut={check_out}&noOfRooms=1"
-        f"&city={city_encoded}&country={data.get('country', '')}&countryName={country_name_encoded}"
-        f"&state={state_encoded}&scr=INR&sct=IN&room%5B0%5D=1"
-        f"&numberOfAdults%5B0%5D=2&numberOfChildren%5B0%5D=0&childrenAge%5B0%5D="
-        f"&channel=web&locationSuggestion.id={data.get('loc_id', '')}"
-        f"&locationSuggestion.name={loc_name_encoded}&locationSuggestion.type={data.get('loc_type', '')}"
-        f"&cachedContent=true&latitude={data.get('lat', '')}&longitude={data.get('lon', '')}"
-        f"&numberOfRooms=1&totalGuest=2&selectedAges="
-    )
-    return url
 
 @app.get("/")
 async def root():
-    return {"status": "online", "message": "iShop Scraper API is actively running."}
+    return {"status": "online", "message": "High-Speed API Engine is running."}
 
 @app.get("/scrape")
 async def scrape_city(city: str, checkin: str, checkout: str):
-    target_url = generate_ishop_url(city, checkin, checkout)
-    
-    if not target_url:
+    if city not in CITY_DATABASE:
         return {"status": "failed", "error": f"City '{city}' not found in database.", "hotels": []}
+        
+    data = CITY_DATABASE[city]
+    
+    # Construct exact payload matching the cURL network request
+    payload = {
+        "checkIn": checkin,
+        "checkOut": checkout,
+        "city": data.get("loc_name", city).strip(),
+        "country": data.get("country", "IN").strip(),
+        "state": data.get("state", "").strip(),
+        "scr": "INR",
+        "sct": "IN",
+        "latitude": str(data.get("lat", "")),
+        "longitude": str(data.get("lon", "")),
+        "rooms": [{"room": "1", "numberOfAdults": "2", "numberOfChildren": "0", "childrenAge": ""}],
+        "channel": "web",
+        "pageNumber": 0,
+        "noOfRooms": "1",
+        "countryName": data.get("countryName", "India").strip(),
+        "totalGuest": 2,
+        "customerId": "",
+        "numberOfRooms": 1,
+        "cachedContent": True,
+        "forNavigation": False,
+        "locationSuggestion": {
+            "id": str(data.get("loc_id", "")),
+            "name": data.get("loc_name", city).strip(),
+            "type": data.get("loc_type", "City").strip()
+        }
+    }
+    
+    headers = {
+        "accept": "application/json, text/plain, */*",
+        "content-type": "application/json",
+        "origin": "https://www.ishoprewards.com",
+        "referer": "https://www.ishoprewards.com/hotels/hotel-list",
+        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "x-booking-trace-id": str(uuid.uuid4())
+    }
+
+    proxies = "http://zggsvjkj:fueqpv8tcjco@31.59.20.176:6754"
     
     try:
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(
-                headless=True,
-                args=[
-                    "--no-sandbox", 
-                    "--disable-setuid-sandbox", 
-                    "--disable-dev-shm-usage",
-                    "--single-process", 
-                    "--no-zygote",
-                    "--disable-blink-features=AutomationControlled"
-                ] 
-            )
+        async with httpx.AsyncClient(proxies=proxies, verify=False) as client:
+            # 1. Pre-flight GET to bypass security and grab a fresh CSRF token
+            await client.get("https://www.ishoprewards.com/", headers=headers, timeout=10.0)
             
-            context_args = {
-                "viewport": {"width": 1440, "height": 900},
-                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-                "proxy": {
-                    "server": "http://31.59.20.176:6754",
-                    "username": "zggsvjkj",
-                    "password": "fueqpv8tcjco"
-                }
-            }
+            if "csrf-token" in client.cookies:
+                headers["csrf-token"] = client.cookies["csrf-token"]
+            else:
+                # Fallback to your cURL token
+                headers["csrf-token"] = "645aac110e54595239ae07750ef04daadb800f4d3246ffd1062ecb652046822398dcd1975a6bca914bd475cfe752af62c5c06f9b0696e3bb6948b9c73daeca08ca6047193c5021dab961b7afdf2a5f6af41b36b7fd7ddd023fb1caf9ec64b1341055a8c4c36fc7e98c4530cf3bd42f99fbcf2d4003a464cb5a4da4846f445c6b"
             
-            context = await browser.new_context(**context_args)
-            await context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+            # 2. Main High-Speed API Hit
+            api_url = "https://www.ishoprewards.com/middleware/hotels/listing"
+            response = await client.post(api_url, json=payload, headers=headers, timeout=20.0)
             
-            page = await context.new_page()
-
-            # Automated Login
-            try:
-                await page.goto("https://www.ishoprewards.com/login", wait_until="domcontentloaded")
-                email = os.environ.get("ISHOP_EMAIL")
-                password = os.environ.get("ISHOP_PASSWORD")
-                if email and password:
-                    await page.fill('input[type="email"]', email)  
-                    await page.fill('input[type="password"]', password)
-                    await page.click('button[type="submit"]') 
-                    await asyncio.sleep(5) 
-            except Exception as e:
-                print(f"Login automation warning: {e}")
-
-            captured_data = {"status": "failed", "error": "Bot detected, logged out, or page loaded too slowly.", "hotels": []}
-            
-            async def handle_response(response):
-                if "listing" in response.url.lower() and response.request.method == "POST":
-                    try:
-                        json_data = await response.json()
-                        if "response" in json_data and "hotels" in json_data["response"]:
-                            captured_data["status"] = "success"
-                            captured_data["error"] = None
-                            captured_data["hotels"] = json_data["response"]["hotels"]
-                    except Exception:
-                        pass
-
-            page.on("response", handle_response)
-            
-            await page.goto(target_url, wait_until="domcontentloaded")
-            await asyncio.sleep(15) 
-            
-            await browser.close()
-            return captured_data
-            
+            if response.status_code == 200:
+                json_data = response.json()
+                if "response" in json_data and "hotels" in json_data["response"]:
+                    return {"status": "success", "error": None, "hotels": json_data["response"]["hotels"]}
+                else:
+                    return {"status": "failed", "error": "API connected but returned empty hotel list.", "hotels": []}
+            else:
+                return {"status": "failed", "error": f"WAF Blocked. Status Code: {response.status_code}", "hotels": []}
+                
     except Exception as e:
         print(traceback.format_exc())
-        return {"status": "failed", "error": f"Backend Error: {str(e)}", "hotels": []}
+        return {"status": "failed", "error": f"Network Error: {str(e)}", "hotels": []}
