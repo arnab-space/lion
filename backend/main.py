@@ -54,14 +54,9 @@ async def scrape_city(city: str, checkin: str, checkout: str):
 
     try:
         async with async_playwright() as p:
-            # Swapped to the next fresh proxy from your list
+            # Proxy REMOVED. Relying entirely on Auth Cookie & Stealth to get domestic Indian rates.
             browser = await p.chromium.launch(
                 headless=True,
-                proxy={
-                    "server": "http://31.56.127.193:7684",
-                    "username": "zggsvjkj",
-                    "password": "fueqpv8tcjco"
-                },
                 args=[
                     "--no-sandbox", 
                     "--disable-dev-shm-usage",
@@ -76,8 +71,6 @@ async def scrape_city(city: str, checkin: str, checkout: str):
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
             )
             
-            # --- AUTHENTICATION INJECTION ---
-            # This forces the browser to log into your account before loading the page
             connect_sid = os.environ.get("CONNECT_SID", "")
             if connect_sid:
                 await context.add_cookies([{
@@ -121,7 +114,8 @@ async def scrape_city(city: str, checkin: str, checkout: str):
                     await search_btn.click(force=True)
             except: pass
             
-            for _ in range(25):
+            # Wait up to 30s to ensure any secondary live-pricing calls finish
+            for _ in range(30):
                 if captured_data["status"] == "success" and len(captured_data["hotels"]) > 0: 
                     break
                 await asyncio.sleep(1)
@@ -129,7 +123,7 @@ async def scrape_city(city: str, checkin: str, checkout: str):
             await browser.close()
             
             if len(captured_data["hotels"]) == 0:
-                captured_data["error"] = "Website returned 0 hotels. Auth cookie missing/expired, or proxy shadow banned."
+                captured_data["error"] = "Website returned 0 hotels. Render IP might be blocked without a proxy."
                 
             return captured_data
             
