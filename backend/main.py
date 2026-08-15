@@ -1,9 +1,9 @@
 import json
 import uuid
-import httpx
 import traceback
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from curl_cffi.requests import AsyncSession
 
 app = FastAPI()
 
@@ -21,7 +21,7 @@ try:
 except FileNotFoundError:
     CITY_DATABASE = {}
 
-# List of all available proxy failovers from your dashboard
+# Active proxy pool with automatic failovers
 PROXY_POOL = [
     "http://zggsvjkj:fueqpv8tcjco@31.59.20.176:6754",
     "http://zggsvjkj:fueqpv8tcjco@31.56.127.193:7684",
@@ -31,7 +31,7 @@ PROXY_POOL = [
 
 @app.get("/")
 async def root():
-    return {"status": "online", "message": "High-Speed API Engine with Proxy Failover is running."}
+    return {"status": "online", "message": "High-Speed curl_cffi Engine is running."}
 
 @app.get("/scrape")
 async def scrape_city(city: str, checkin: str, checkout: str):
@@ -76,20 +76,20 @@ async def scrape_city(city: str, checkin: str, checkout: str):
         "x-booking-trace-id": str(uuid.uuid4())
     }
 
-    # Loop through proxy pool until one succeeds or all fail
     for proxy_url in PROXY_POOL:
         try:
-            print(f"Trying proxy: {proxy_url}")
-            async with httpx.AsyncClient(proxy=proxy_url, verify=False, timeout=12.0) as client:
-                await client.get("https://www.ishoprewards.com/", headers=headers, timeout=8.0)
+            print(f"Trying proxy with browser impersonation: {proxy_url}")
+            # AsyncSession with Chrome impersonation bypasses WAF TLS fingerprinting
+            async with AsyncSession(impersonate="chrome", proxy=proxy_url, verify=False) as session:
+                await session.get("https://www.ishoprewards.com/", headers=headers, timeout=8.0)
                 
-                if "csrf-token" in client.cookies:
-                    headers["csrf-token"] = client.cookies["csrf-token"]
+                if "csrf-token" in session.cookies:
+                    headers["csrf-token"] = session.cookies["csrf-token"]
                 else:
                     headers["csrf-token"] = "645aac110e54595239ae07750ef04daadb800f4d3246ffd1062ecb652046822398dcd1975a6bca914bd475cfe752af62c5c06f9b0696e3bb6948b9c73daeca08ca6047193c5021dab961b7afdf2a5f6af41b36b7fd7ddd023fb1caf9ec64b1341055a8c4c36fc7e98c4530cf3bd42f99fbcf2d4003a464cb5a4da4846f445c6b"
                 
                 api_url = "https://www.ishoprewards.com/middleware/hotels/listing"
-                response = await client.post(api_url, json=payload, headers=headers, timeout=15.0)
+                response = await session.post(api_url, json=payload, headers=headers, timeout=15.0)
                 
                 if response.status_code == 200:
                     json_data = response.json()
