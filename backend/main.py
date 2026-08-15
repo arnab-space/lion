@@ -54,7 +54,7 @@ async def scrape_city(city: str, checkin: str, checkout: str):
 
     try:
         async with async_playwright() as p:
-            # 1. Re-enabled Proxy & Bot Stealth to bypass Shadow Bans
+            # 1. Chromium level cache busting
             browser = await p.chromium.launch(
                 headless=True,
                 proxy={
@@ -65,19 +65,34 @@ async def scrape_city(city: str, checkin: str, checkout: str):
                 args=[
                     "--no-sandbox", 
                     "--disable-dev-shm-usage",
-                    "--disable-blink-features=AutomationControlled"
+                    "--disable-blink-features=AutomationControlled",
+                    "--disable-cache",
+                    "--disable-application-cache",
+                    "--disk-cache-size=0"
                 ]
             )
+            
             context = await browser.new_context(
                 viewport={"width": 1440, "height": 900},
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
             )
+            
+            # 2. Force wipe all cookies and residual data for a completely fresh session
+            await context.clear_cookies()
+            
+            # 3. Network-level cache busting (Force the proxy and the server to fetch fresh data)
+            await context.set_extra_http_headers({
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            })
+            
             await context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             page = await context.new_page()
 
             captured_data = {"status": "failed", "hotels": []}
             
-            # 2. Strict Interceptor: Only accepts payloads that actually contain hotels
+            # Strict Interceptor
             async def handle_response(response):
                 if "listing" in response.url.lower() and response.request.method == "POST":
                     try:
@@ -90,7 +105,7 @@ async def scrape_city(city: str, checkin: str, checkout: str):
             
             page.on("response", handle_response)
 
-            # 3. Load UI
+            # Load UI
             await page.goto(target_url, wait_until="domcontentloaded")
             await asyncio.sleep(4)
             
@@ -108,7 +123,7 @@ async def scrape_city(city: str, checkin: str, checkout: str):
                     await search_btn.click(force=True)
             except: pass
             
-            # 4. Wait up to 25s for REAL data
+            # Wait up to 25s for REAL data
             for _ in range(25):
                 if captured_data["status"] == "success" and len(captured_data["hotels"]) > 0: 
                     break
