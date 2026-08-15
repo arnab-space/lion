@@ -1,10 +1,9 @@
 import json
-import urllib.parse
+import asyncio
+import traceback
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from playwright.async_api import async_playwright
-import asyncio
-import traceback
 
 app = FastAPI()
 
@@ -16,100 +15,81 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load city database on startup
 try:
     with open('city_database.json', 'r') as f:
         CITY_DATABASE = json.load(f)
 except FileNotFoundError:
     CITY_DATABASE = {}
 
-def generate_ishop_url(city_key, check_in, check_out):
-    if city_key not in CITY_DATABASE:
-        return None
-        
-    data = CITY_DATABASE[city_key]
-    state_encoded = urllib.parse.quote(data.get("state", ""))
-    country_name_encoded = urllib.parse.quote(data.get("countryName", ""))
-    loc_name_encoded = urllib.parse.quote(data.get("loc_name", ""))
-    city_encoded = urllib.parse.quote(data.get("city", ""))
-    
-    url = (
-        f"https://www.ishoprewards.com/hotels/hotel-list?"
-        f"checkIn={check_in}&checkOut={check_out}&noOfRooms=1"
-        f"&city={city_encoded}&country={data.get('country', '')}&countryName={country_name_encoded}"
-        f"&state={state_encoded}&scr=INR&sct=IN&room%5B0%5D=1"
-        f"&numberOfAdults%5B0%5D=2&numberOfChildren%5B0%5D=0&childrenAge%5B0%5D="
-        f"&channel=web&locationSuggestion.id={data.get('loc_id', '')}"
-        f"&locationSuggestion.name={loc_name_encoded}&locationSuggestion.type={data.get('loc_type', '')}"
-        f"&cachedContent=true&latitude={data.get('lat', '')}&longitude={data.get('lon', '')}"
-        f"&numberOfRooms=1&totalGuest=2&selectedAges="
-    )
-    return url
-
 @app.get("/")
 async def root():
-    return {"status": "online", "message": "Bulletproof Direct-URL Scraper API is running."}
+    return {"status": "online", "message": "Automation Engine is running."}
 
 @app.get("/scrape")
 async def scrape_city(city: str, checkin: str, checkout: str):
-    target_url = generate_ishop_url(city, checkin, checkout)
-    
-    if not target_url:
-        return {"status": "failed", "error": f"City '{city}' not found in database.", "hotels": []}
-    
     try:
         async with async_playwright() as p:
             browser = await p.chromium.launch(
                 headless=True,
-                args=[
-                    "--disable-blink-features=AutomationControlled",
-                    "--no-sandbox",
-                    "--disable-setuid-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--single-process", 
-                    "--no-zygote",
-                    "--window-size=1440,900"
-                ]
+                args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
             )
             
             context = await browser.new_context(
                 viewport={"width": 1440, "height": 900},
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
             )
-            await context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             page = await context.new_page()
 
-            captured_data = {"status": "failed", "error": "Hotel listing API payload not intercepted.", "hotels": []}
+            # 1. Start at the root to ensure cookies are set
+            await page.goto("https://www.ishoprewards.com/hotels/hotel-list", wait_until="domcontentloaded")
+            await asyncio.sleep(3)
             
-            # Intercept the background POST request returning hotel data
+            # 2. Clear T&C Popup
+            try:
+                tc_button = page.locator("button.ishop-popup-button").first
+                if await tc_button.is_visible(timeout=3000):
+                    await tc_button.click()
+                    await asyncio.sleep(1)
+            except Exception:
+                pass
+
+            # 3. Input City
+            loc_trigger = page.locator(".fontsize-16.text-capitalize.text-dark.fw_6.mb-0.text-truncate, .fontsize-16.text-truncate").first
+            input_box = page.locator("input[placeholder*='Search'], input[class*='w-100'], .search-box input").first
+            
+            if await loc_trigger.is_visible(timeout=3000):
+                await loc_trigger.click()
+                await asyncio.sleep(1)
+
+            await input_box.fill("")
+            await input_box.type(city, delay=100)
+            await asyncio.sleep(2) # Allow dropdown to load
+
+            dropdown = page.locator(".label-box, ul li .label-box, .suggestion-results li").first
+            await dropdown.click()
+            await asyncio.sleep(1)
+
+            # 4. Prepare Interceptor
+            captured_data = {"status": "failed", "error": "API payload not captured", "hotels": []}
+            
             async def handle_response(response):
                 if "listing" in response.url.lower() and response.request.method == "POST":
                     try:
                         json_data = await response.json()
                         if "response" in json_data and "hotels" in json_data["response"]:
                             captured_data["status"] = "success"
-                            captured_data["error"] = None
                             captured_data["hotels"] = json_data["response"]["hotels"]
-                    except Exception:
-                        pass
+                    except: pass
 
             page.on("response", handle_response)
-
-            # Directly load the pre-configured search URL
-            await page.goto(target_url, wait_until="domcontentloaded")
             
-            # Clear T&C Popup if it blocks the view
-            try:
-                tc_button = page.locator("button.ishop-popup-button").first
-                await tc_button.wait_for(state="visible", timeout=3000)
-                await tc_button.evaluate("el => el.click()")
-            except Exception:
-                pass
-
-            # Wait up to 18 seconds for the background API request to complete and trigger the interceptor
-            for _ in range(18):
-                if captured_data["status"] == "success":
-                    break
+            # 5. Click Search
+            search_btn = page.locator("button.searchbn_web, .searchbn_web").first
+            await search_btn.click()
+            
+            # Wait for response
+            for _ in range(15):
+                if captured_data["status"] == "success": break
                 await asyncio.sleep(1)
 
             await browser.close()
@@ -117,4 +97,4 @@ async def scrape_city(city: str, checkin: str, checkout: str):
             
     except Exception as e:
         print(traceback.format_exc())
-        return {"status": "failed", "error": f"Backend Error: {str(e)}", "hotels": []}
+        return {"status": "failed", "error": str(e), "hotels": []}
