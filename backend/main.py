@@ -1,10 +1,10 @@
-import os
 import json
-import uuid
-import traceback
+import urllib.parse
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from curl_cffi.requests import AsyncSession
+from playwright.async_api import async_playwright
+import asyncio
+import traceback
 
 app = FastAPI()
 
@@ -22,82 +22,99 @@ try:
 except FileNotFoundError:
     CITY_DATABASE = {}
 
+def generate_ishop_url(city_key, check_in, check_out):
+    if city_key not in CITY_DATABASE:
+        return None
+        
+    data = CITY_DATABASE[city_key]
+    state_encoded = urllib.parse.quote(data.get("state", ""))
+    country_name_encoded = urllib.parse.quote(data.get("countryName", ""))
+    loc_name_encoded = urllib.parse.quote(data.get("loc_name", ""))
+    city_encoded = urllib.parse.quote(data.get("city", ""))
+    
+    url = (
+        f"https://www.ishoprewards.com/hotels/hotel-list?"
+        f"checkIn={check_in}&checkOut={check_out}&noOfRooms=1"
+        f"&city={city_encoded}&country={data.get('country', '')}&countryName={country_name_encoded}"
+        f"&state={state_encoded}&scr=INR&sct=IN&room%5B0%5D=1"
+        f"&numberOfAdults%5B0%5D=2&numberOfChildren%5B0%5D=0&childrenAge%5B0%5D="
+        f"&channel=web&locationSuggestion.id={data.get('loc_id', '')}"
+        f"&locationSuggestion.name={loc_name_encoded}&locationSuggestion.type={data.get('loc_type', '')}"
+        f"&cachedContent=true&latitude={data.get('lat', '')}&longitude={data.get('lon', '')}"
+        f"&numberOfRooms=1&totalGuest=2&selectedAges="
+    )
+    return url
+
 @app.get("/")
 async def root():
-    return {"status": "online", "message": "Authenticated High-Speed API Engine is running."}
+    return {"status": "online", "message": "Playwright Scraper API is actively running."}
 
 @app.get("/scrape")
 async def scrape_city(city: str, checkin: str, checkout: str):
-    if city not in CITY_DATABASE:
+    target_url = generate_ishop_url(city, checkin, checkout)
+    
+    if not target_url:
         return {"status": "failed", "error": f"City '{city}' not found in database.", "hotels": []}
-        
-    data = CITY_DATABASE[city]
     
-    payload = {
-        "checkIn": checkin,
-        "checkOut": checkout,
-        "city": data.get("loc_name", city).strip(),
-        "country": data.get("country", "IN").strip(),
-        "state": data.get("state", "").strip(),
-        "scr": "INR",
-        "sct": "IN",
-        "latitude": str(data.get("lat", "")),
-        "longitude": str(data.get("lon", "")),
-        "rooms": [{"room": "1", "numberOfAdults": "2", "numberOfChildren": "0", "childrenAge": ""}],
-        "channel": "web",
-        "pageNumber": 0,
-        "noOfRooms": "1",
-        "countryName": data.get("countryName", "India").strip(),
-        "totalGuest": 2,
-        "customerId": "",
-        "numberOfRooms": 1,
-        "cachedContent": True,
-        "forNavigation": False,
-        "locationSuggestion": {
-            "id": str(data.get("loc_id", "")),
-            "name": data.get("loc_name", city).strip(),
-            "type": data.get("loc_type", "City").strip()
-        }
-    }
-    
-    headers = {
-        "accept": "application/json, text/plain, */*",
-        "content-type": "application/json",
-        "origin": "https://www.ishoprewards.com",
-        "referer": "https://www.ishoprewards.com/hotels/hotel-list",
-        "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "x-booking-trace-id": str(uuid.uuid4())
-    }
-
-    # Retrieve session credentials from Render environment variables
-    connect_sid = os.environ.get("CONNECT_SID", "")
-    csrf_token = os.environ.get("CSRF_TOKEN", "645aac110e54595239ae07750ef04daadb800f4d3246ffd1062ecb652046822398dcd1975a6bca914bd475cfe752af62c5c06f9b0696e3bb6948b9c73daeca08ca6047193c5021dab961b7afdf2a5f6af41b36b7fd7ddd023fb1caf9ec64b1341055a8c4c36fc7e98c4530cf3bd42f99fbcf2d4003a464cb5a4da4846f445c6b")
-
-    cookies = {}
-    if connect_sid:
-        cookies["connect.sid"] = connect_sid
-    
-    if csrf_token:
-        headers["csrf-token"] = csrf_token
-
     try:
-        # Using impersonate="chrome" to bypass TLS fingerprint checks cleanly
-        async with AsyncSession(impersonate="chrome", verify=False) as session:
-            if cookies:
-                session.cookies.update(cookies)
-                
-            api_url = "https://www.ishoprewards.com/middleware/hotels/listing"
-            response = await session.post(api_url, json=payload, headers=headers, cookies=cookies, timeout=20.0)
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox", 
+                    "--disable-setuid-sandbox", 
+                    "--disable-dev-shm-usage",
+                    "--single-process", 
+                    "--no-zygote",
+                    "--disable-blink-features=AutomationControlled"
+                ] 
+            )
             
-            if response.status_code == 200:
-                json_data = response.json()
-                if "response" in json_data and "hotels" in json_data["response"]:
-                    return {"status": "success", "error": None, "hotels": json_data["response"]["hotels"]}
-                else:
-                    return {"status": "failed", "error": "API connected but returned empty hotel list.", "hotels": []}
-            else:
-                return {"status": "failed", "error": f"Authentication or WAF Block. Status Code: {response.status_code}", "hotels": []}
+            context = await browser.new_context(
+                viewport={"width": 1440, "height": 900},
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+            )
+            await context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+            
+            page = await context.new_page()
+            
+            captured_data = {"status": "failed", "error": "Telemetry engine bypassed extraction or page timed out.", "hotels": []}
+            
+            async def handle_response(response):
+                if "listing" in response.url.lower() and response.request.method == "POST":
+                    try:
+                        json_data = await response.json()
+                        if "response" in json_data and "hotels" in json_data["response"]:
+                            captured_data["status"] = "success"
+                            captured_data["error"] = None
+                            captured_data["hotels"] = json_data["response"]["hotels"]
+                    except Exception:
+                        pass
+
+            page.on("response", handle_response)
+            
+            # Navigate directly to the fully constructed URL
+            await page.goto(target_url, wait_until="domcontentloaded")
+            await asyncio.sleep(4)
+            
+            # Handle T&C Popup if it appears
+            try:
+                tc_button = page.locator("button.ishop-popup-button").first
+                await tc_button.wait_for(state="visible", timeout=5000)
+                await tc_button.evaluate("el => el.click()")
+                await asyncio.sleep(2)
+            except Exception:
+                pass
                 
+            # Wait for the API response to be intercepted
+            for _ in range(25):
+                if captured_data["status"] == "success":
+                    break
+                await asyncio.sleep(1)
+            
+            await browser.close()
+            return captured_data
+            
     except Exception as e:
         print(traceback.format_exc())
-        return {"status": "failed", "error": f"Network Error: {str(e)}", "hotels": []}
+        return {"status": "failed", "error": f"Backend Error: {str(e)}", "hotels": []}
