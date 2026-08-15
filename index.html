@@ -90,7 +90,7 @@
                         setHotels(data.hotels);
                     } else {
                         setHotels([]);
-                        setError("No hotels found. Please try a different search.");
+                        setError(data.error || "No hotels found. Please try a different search.");
                     }
                 } catch (err) {
                     console.error("Fetch failed:", err);
