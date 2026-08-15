@@ -72,7 +72,7 @@ async def scrape_city(city: str, checkin: str, checkout: str):
     proxy_url = "http://zggsvjkj:fueqpv8tcjco@31.59.20.176:6754"
     
     try:
-        async with httpx.AsyncClient(proxy=proxy_url, verify=False) as client:
+        async with httpx.AsyncClient(verify=False) as client:
             await client.get("https://www.ishoprewards.com/", headers=headers, timeout=10.0)
             
             if "csrf-token" in client.cookies:
