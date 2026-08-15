@@ -1,3 +1,4 @@
+import os
 import json
 import uuid
 import traceback
@@ -21,17 +22,9 @@ try:
 except FileNotFoundError:
     CITY_DATABASE = {}
 
-# Active proxy pool with automatic failovers
-PROXY_POOL = [
-    "http://zggsvjkj:fueqpv8tcjco@31.59.20.176:6754",
-    "http://zggsvjkj:fueqpv8tcjco@31.56.127.193:7684",
-    "http://zggsvjkj:fueqpv8tcjco@45.38.107.97:6014",
-    "http://zggsvjkj:fueqpv8tcjco@198.105.121.200:6462"
-]
-
 @app.get("/")
 async def root():
-    return {"status": "online", "message": "High-Speed curl_cffi Engine is running."}
+    return {"status": "online", "message": "Authenticated High-Speed API Engine is running."}
 
 @app.get("/scrape")
 async def scrape_city(city: str, checkin: str, checkout: str):
@@ -76,29 +69,35 @@ async def scrape_city(city: str, checkin: str, checkout: str):
         "x-booking-trace-id": str(uuid.uuid4())
     }
 
-    for proxy_url in PROXY_POOL:
-        try:
-            print(f"Trying proxy with browser impersonation: {proxy_url}")
-            # AsyncSession with Chrome impersonation bypasses WAF TLS fingerprinting
-            async with AsyncSession(impersonate="chrome", proxy=proxy_url, verify=False) as session:
-                await session.get("https://www.ishoprewards.com/", headers=headers, timeout=8.0)
+    # Retrieve session credentials from Render environment variables
+    connect_sid = os.environ.get("CONNECT_SID", "")
+    csrf_token = os.environ.get("CSRF_TOKEN", "645aac110e54595239ae07750ef04daadb800f4d3246ffd1062ecb652046822398dcd1975a6bca914bd475cfe752af62c5c06f9b0696e3bb6948b9c73daeca08ca6047193c5021dab961b7afdf2a5f6af41b36b7fd7ddd023fb1caf9ec64b1341055a8c4c36fc7e98c4530cf3bd42f99fbcf2d4003a464cb5a4da4846f445c6b")
+
+    cookies = {}
+    if connect_sid:
+        cookies["connect.sid"] = connect_sid
+    
+    if csrf_token:
+        headers["csrf-token"] = csrf_token
+
+    try:
+        # Using impersonate="chrome" to bypass TLS fingerprint checks cleanly
+        async with AsyncSession(impersonate="chrome", verify=False) as session:
+            if cookies:
+                session.cookies.update(cookies)
                 
-                if "csrf-token" in session.cookies:
-                    headers["csrf-token"] = session.cookies["csrf-token"]
-                else:
-                    headers["csrf-token"] = "645aac110e54595239ae07750ef04daadb800f4d3246ffd1062ecb652046822398dcd1975a6bca914bd475cfe752af62c5c06f9b0696e3bb6948b9c73daeca08ca6047193c5021dab961b7afdf2a5f6af41b36b7fd7ddd023fb1caf9ec64b1341055a8c4c36fc7e98c4530cf3bd42f99fbcf2d4003a464cb5a4da4846f445c6b"
-                
-                api_url = "https://www.ishoprewards.com/middleware/hotels/listing"
-                response = await session.post(api_url, json=payload, headers=headers, timeout=15.0)
-                
-                if response.status_code == 200:
-                    json_data = response.json()
-                    if "response" in json_data and "hotels" in json_data["response"]:
-                        return {"status": "success", "error": None, "hotels": json_data["response"]["hotels"]}
-                else:
-                    print(f"Proxy blocked with status {response.status_code}, trying next...")
-        except Exception as e:
-            print(f"Proxy {proxy_url} failed with error: {str(e)}, trying next...")
-            continue
+            api_url = "https://www.ishoprewards.com/middleware/hotels/listing"
+            response = await session.post(api_url, json=payload, headers=headers, cookies=cookies, timeout=20.0)
             
-    return {"status": "failed", "error": "All proxy failovers exhausted. WAF blocked requests.", "hotels": []}
+            if response.status_code == 200:
+                json_data = response.json()
+                if "response" in json_data and "hotels" in json_data["response"]:
+                    return {"status": "success", "error": None, "hotels": json_data["response"]["hotels"]}
+                else:
+                    return {"status": "failed", "error": "API connected but returned empty hotel list.", "hotels": []}
+            else:
+                return {"status": "failed", "error": f"Authentication or WAF Block. Status Code: {response.status_code}", "hotels": []}
+                
+    except Exception as e:
+        print(traceback.format_exc())
+        return {"status": "failed", "error": f"Network Error: {str(e)}", "hotels": []}
