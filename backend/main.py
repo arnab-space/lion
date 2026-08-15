@@ -54,7 +54,6 @@ async def scrape_city(city: str, checkin: str, checkout: str):
 
     try:
         async with async_playwright() as p:
-            # Proxy REMOVED. Relying entirely on Auth Cookie & Stealth to get domestic Indian rates.
             browser = await p.chromium.launch(
                 headless=True,
                 args=[
@@ -62,7 +61,9 @@ async def scrape_city(city: str, checkin: str, checkout: str):
                     "--disable-dev-shm-usage",
                     "--disable-blink-features=AutomationControlled",
                     "--disable-cache",
-                    "--disk-cache-size=0"
+                    "--disk-cache-size=0",
+                    "--disable-gpu", # EXTRA MEMORY SAVING
+                    "--no-zygote"    # EXTRA MEMORY SAVING
                 ]
             )
             
@@ -84,6 +85,15 @@ async def scrape_city(city: str, checkin: str, checkout: str):
             
             await context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             page = await context.new_page()
+
+            # --- MASSIVE MEMORY SAVER: BLOCK IMAGES, FONTS, AND CSS ---
+            async def intercept_route(route):
+                if route.request.resource_type in ["image", "media", "font", "stylesheet"]:
+                    await route.abort()
+                else:
+                    await route.continue_()
+            await page.route("**/*", intercept_route)
+            # ----------------------------------------------------------
 
             captured_data = {"status": "failed", "hotels": []}
             
@@ -114,7 +124,6 @@ async def scrape_city(city: str, checkin: str, checkout: str):
                     await search_btn.click(force=True)
             except: pass
             
-            # Wait up to 30s to ensure any secondary live-pricing calls finish
             for _ in range(30):
                 if captured_data["status"] == "success" and len(captured_data["hotels"]) > 0: 
                     break
