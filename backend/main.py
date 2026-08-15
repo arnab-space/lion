@@ -73,16 +73,15 @@ async def scrape_city(city: str, checkin: str, checkout: str):
     
     try:
         async with httpx.AsyncClient(proxies=proxies, verify=False) as client:
-            # 1. Pre-flight GET to bypass security and grab a fresh CSRF token
+            # Pre-flight GET to bypass security and grab a fresh CSRF token
             await client.get("https://www.ishoprewards.com/", headers=headers, timeout=10.0)
             
             if "csrf-token" in client.cookies:
                 headers["csrf-token"] = client.cookies["csrf-token"]
             else:
-                # Fallback to your cURL token
                 headers["csrf-token"] = "645aac110e54595239ae07750ef04daadb800f4d3246ffd1062ecb652046822398dcd1975a6bca914bd475cfe752af62c5c06f9b0696e3bb6948b9c73daeca08ca6047193c5021dab961b7afdf2a5f6af41b36b7fd7ddd023fb1caf9ec64b1341055a8c4c36fc7e98c4530cf3bd42f99fbcf2d4003a464cb5a4da4846f445c6b"
             
-            # 2. Main High-Speed API Hit
+            # Main High-Speed API Hit
             api_url = "https://www.ishoprewards.com/middleware/hotels/listing"
             response = await client.post(api_url, json=payload, headers=headers, timeout=20.0)
             
