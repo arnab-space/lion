@@ -8,16 +8,14 @@ import traceback
 
 app = FastAPI()
 
-# 1. FIXED CORS POLICY
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
-    allow_credentials=False, # Critical: Must be False when origin is "*"
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Load the city database on startup
 try:
     with open('city_database.json', 'r') as f:
         CITY_DATABASE = json.load(f)
@@ -30,7 +28,6 @@ def generate_ishop_url(city_key, check_in, check_out):
         return None
         
     data = CITY_DATABASE[city_key]
-    
     state_encoded = urllib.parse.quote(data.get("state", ""))
     country_name_encoded = urllib.parse.quote(data.get("countryName", ""))
     loc_name_encoded = urllib.parse.quote(data.get("loc_name", ""))
@@ -60,24 +57,31 @@ async def scrape_city(city: str, checkin: str, checkout: str):
     if not target_url:
         return {"status": "failed", "error": f"City '{city}' not found in database.", "hotels": []}
     
-    # 3. GRACEFUL CRASH HANDLER
     try:
         async with async_playwright() as p:
-            # 2. MEMORY-SAVING CHROMIUM FLAGS
             browser = await p.chromium.launch(
                 headless=True,
                 args=[
                     "--no-sandbox", 
                     "--disable-setuid-sandbox", 
                     "--disable-dev-shm-usage",
-                    "--single-process", # Prevents OOM kills on Render's 512MB tier
-                    "--no-zygote"
+                    "--single-process", 
+                    "--no-zygote",
+                    "--disable-blink-features=AutomationControlled" # Restored Anti-Bot Flag
                 ] 
             )
-            context = await browser.new_context()
+            
+            # Restored your exact User-Agent and stealth scripts
+            context = await browser.new_context(
+                viewport={"width": 1440, "height": 900},
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+            )
+            await context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+            
             page = await context.new_page()
             
-            captured_data = {"status": "failed", "error": "No data intercepted. Try searching again.", "hotels": []}
+            # Explicit error message to send to your UI if interception fails
+            captured_data = {"status": "failed", "error": "Bot detected or page loaded too slowly.", "hotels": []}
             
             async def handle_response(response):
                 if "listing" in response.url.lower() and response.request.method == "POST":
@@ -93,7 +97,9 @@ async def scrape_city(city: str, checkin: str, checkout: str):
             page.on("response", handle_response)
             
             await page.goto(target_url, wait_until="domcontentloaded")
-            await asyncio.sleep(12) 
+            
+            # Increased cloud wait time to 15 seconds
+            await asyncio.sleep(15) 
             
             await browser.close()
             return captured_data
