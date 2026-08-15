@@ -1,5 +1,5 @@
 # Use the official Playwright Python image (includes Chromium and OS dependencies)
-FROM mcr.microsoft.com/playwright/python:v1.43.0-jammy
+FROM mcr.microsoft.com/playwright/python:v1.62.0-jammy
 
 WORKDIR /app
 
