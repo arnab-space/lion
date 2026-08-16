@@ -72,7 +72,6 @@
         const { useState, useEffect, useMemo, useRef } = React;
         const { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } = window.Recharts;
 
-        // Common Indian Cities database list for autocomplete
         const CITIES_DATABASE = [
             "Mumbai", "Delhi", "Kolkata", "Bengaluru", "Chennai", "Hyderabad", "Pune", "Ahmedabad", 
             "Jaipur", "Goa", "Surat", "Lucknow", "Kanpur", "Nagpur", "Indore", "Thane", "Bhopal", 
@@ -116,7 +115,6 @@
 
             const dropdownRef = useRef(null);
 
-            // Close city dropdown when clicking outside
             useEffect(() => {
                 const handleClickOutside = (event) => {
                     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -222,12 +220,18 @@
                         }
                     }
 
+                    // Direct mapping to hotelInfo.image as seen in the API response payload
+                    const rawImg = hotel.hotelInfo?.image || 
+                                   hotel.hotelInfo?.thumbnailUrl || 
+                                   (Array.isArray(hotel.hotelInfo?.imagesList) ? hotel.hotelInfo.imagesList[0] : null) || 
+                                   "https://images.unsplash.com/photo-1566073171526-87e2aa219159?q=80&w=600&auto=format&fit=crop";
+
                     processedList.push({
                         ct_hid,
                         name: hotel.hotelInfo?.name || "Unknown Hotel",
                         rating: hotel.hotelInfo?.starRating || "N/A",
                         location: hotel.hotelInfo?.address || "Unknown Location",
-                        image: hotel.hotelInfo?.thumbnailUrl || "https://images.unsplash.com/photo-1566073171526-87e2aa219159?q=80&w=600&auto=format&fit=crop",
+                        image: rawImg,
                         bestSupplier,
                         bestPrice: bestPrice === Infinity ? "N/A" : bestPrice,
                         rawPrices: prices
@@ -329,8 +333,6 @@
 
                     <div className="max-w-5xl mx-auto mt-10 px-4 relative z-40">
                         <div className="glass-card p-2 rounded-2xl flex items-center gap-2 relative">
-                            
-                            {/* City Input with Autocomplete Dropdown */}
                             <div className="flex-1 flex items-center px-5 py-3 glass-input rounded-xl mr-1 relative" ref={dropdownRef}>
                                 <svg className="w-5 h-5 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                 <div className="flex flex-col w-full relative">
@@ -356,7 +358,6 @@
                                     />
                                     <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mt-0.5">Location</span>
 
-                                    {/* Autocomplete Suggestions Menu */}
                                     {showDropdown && filteredCities.length > 0 && (
                                         <div className="absolute top-full left-0 mt-2 w-full bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto z-50 py-1">
                                             {filteredCities.map((item, idx) => (
