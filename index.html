@@ -3,47 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iShop Real-Time Scraper Dashboard</title>
+    <title>iShop API Monitor | Enterprise</title>
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <!-- Recharts for Analytics -->
     <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
     <script src="https://unpkg.com/recharts@2.12.0/umd/Recharts.js"></script>
-
-    <!-- SheetJS for dynamic Excel Export -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
-    
-    <!-- html2canvas and jsPDF for PDF Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f7f6; }
-        .glass-panel { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); }
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc;
+            /* Animated Mesh Gradient Background */
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(28,100%,74%,0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(220,100%,77%,0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, hsla(28,100%,74%,0.1) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, hsla(220,100%,77%,0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: #1e293b;
+        }
+        
+        /* Glassmorphism Classes */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.04);
+        }
+        
+        .glass-header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.9);
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: all 0.3s ease;
+        }
+        .glass-input:focus-within {
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.1);
+            border-color: rgba(234, 88, 12, 0.3);
+        }
+
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+<body class="antialiased min-h-screen flex flex-col">
     <div id="root" class="flex-grow"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
         const { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } = window.Recharts;
 
-        // Utility to format date to YYYY-MM-DD
         const formatDate = (date) => {
             const d = new Date(date);
             let month = '' + (d.getMonth() + 1);
@@ -57,10 +84,8 @@
         const App = () => {
             const dashboardRef = useRef(null);
             
-            // Set default dates (Check-in = today + 15 days)
             const defaultCheckIn = new Date();
             defaultCheckIn.setDate(defaultCheckIn.getDate() + 15);
-            
             const defaultCheckOut = new Date(defaultCheckIn);
             defaultCheckOut.setDate(defaultCheckOut.getDate() + 1);
 
@@ -72,11 +97,9 @@
             const [hotels, setHotels] = useState([]);
             const [error, setError] = useState(null);
 
-            // Automatically update Check-out to Check-in + 1 day when Check-in changes
             const handleCheckInChange = (e) => {
                 const newCheckInDate = e.target.value;
                 setCheckIn(newCheckInDate);
-                
                 const nextDay = new Date(newCheckInDate);
                 nextDay.setDate(nextDay.getDate() + 1);
                 setCheckOut(formatDate(nextDay));
@@ -85,12 +108,9 @@
             const handleSearch = async () => {
                 setLoading(true);
                 setError(null);
-                setHotels([]); // Clear previous results
+                setHotels([]); 
                 try {
-                    // Replaced with your active local/tunnel endpoint
                     const API_URL = `https://jpeg-farms-throwing-recommend.trycloudflare.com/scrape?city=${city}&checkin=${checkIn}&checkout=${checkOut}`;
-                    
-                    // Fixed: 'apiUrl' variable typo corrected to 'API_URL'
                     const response = await fetch(API_URL);
                     const data = await response.json();
                     
@@ -98,23 +118,20 @@
                         setHotels(data.hotels);
                     } else {
                         setHotels([]);
-                        setError(data.error || "No hotels found. Please try a different search or check your backend connection.");
+                        setError(data.error || "Website returned 0 properties. Check proxy or session state.");
                     }
                 } catch (err) {
-                    console.error("Fetch failed:", err);
-                    setError("Unable to connect to the scraping API. Ensure the backend tunnel is running.");
+                    setError("Scraping engine unreachable. Verify the Cloudflare tunnel and local server.");
                     setHotels([]);
                 } finally {
                     setLoading(false);
                 }
             };
 
-            // Process data for KPIs and Charts
             const { ctWinRate, supplierShare, starData, parsedHotels } = useMemo(() => {
                 if (!hotels || hotels.length === 0) return { ctWinRate: 0, supplierShare: [], starData: [], parsedHotels: [] };
 
-                let ctWins = 0;
-                let totalValid = 0;
+                let ctWins = 0, totalValid = 0;
                 let suppliers = { Cleartrip: 0, MakeMyTrip: 0, Yatra: 0, TripSure: 0 };
                 let stars = { "5 Star": { ct: 0, comp: 0 }, "4 Star": { ct: 0, comp: 0 }, "3 Star": { ct: 0, comp: 0 }, "2 Star": { ct: 0, comp: 0 } };
                 let processedList = [];
@@ -130,13 +147,11 @@
                         else if (name.includes("tripsure")) prices.tripsure = sup.price;
                     });
 
-                    // Add to supplier counts for coverage pie chart
                     if (prices.cleartrip) suppliers.Cleartrip++;
                     if (prices.makemytrip) suppliers.MakeMyTrip++;
                     if (prices.yatra) suppliers.Yatra++;
                     if (prices.tripsure) suppliers.TripSure++;
 
-                    // Determine single best price for UI cards
                     let bestSupplier = "N/A";
                     let bestPrice = Infinity;
                     
@@ -147,21 +162,19 @@
                         }
                     });
 
-                    // Extract ct_hid safely
                     const ct_hid = hotel.id || hotel.hotelInfo?.id || hotel.hotelInfo?.hotelId || hotel.hotelId || "N/A";
 
                     processedList.push({
-                        ct_hid: ct_hid,
+                        ct_hid,
                         name: hotel.hotelInfo?.name || "Unknown Hotel",
                         rating: hotel.hotelInfo?.starRating || "N/A",
                         location: hotel.hotelInfo?.address || "Unknown Location",
                         image: hotel.hotelInfo?.thumbnailUrl || "https://images.unsplash.com/photo-1566073171526-87e2aa219159?q=80&w=600&auto=format&fit=crop",
-                        bestSupplier: bestSupplier,
+                        bestSupplier,
                         bestPrice: bestPrice === Infinity ? "N/A" : bestPrice,
                         rawPrices: prices
                     });
 
-                    // Calculate Cleartrip Win Rate
                     if (prices.cleartrip) {
                         const compPrices = [prices.makemytrip, prices.yatra, prices.tripsure].filter(p => p !== null);
                         if (compPrices.length > 0) {
@@ -169,7 +182,6 @@
                             const minComp = Math.min(...compPrices);
                             if (prices.cleartrip <= minComp) ctWins++;
 
-                            // Map to Star Rating
                             const ratingInt = Math.floor(hotel.hotelInfo?.starRating || 3);
                             const starKey = `${ratingInt} Star`;
                             if (stars[starKey]) {
@@ -190,7 +202,7 @@
                 ].filter(d => d.value > 0);
 
                 const barData = Object.keys(stars)
-                    .filter(key => stars[key].ct > 0 || stars[key].comp > 0) // Hide empty star ratings
+                    .filter(key => stars[key].ct > 0 || stars[key].comp > 0)
                     .map(key => ({
                         name: key,
                         "CT Win": stars[key].ct,
@@ -200,10 +212,8 @@
                 return { ctWinRate: winRate, supplierShare: pieData, starData: barData, parsedHotels: processedList };
             }, [hotels]);
 
-            // EXCEL EXPORT (With ct_hids added)
             const exportToExcel = () => {
                 if (parsedHotels.length === 0) return;
-                
                 const flatData = parsedHotels.map(h => ({
                     "CT_HID": h.ct_hid,
                     "Hotel Name": h.name,
@@ -217,96 +227,58 @@
                 }));
                 const ws = XLSX.utils.json_to_sheet(flatData);
                 const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Scraped Prices");
-                XLSX.writeFile(wb, `Hotel_Scrape_${city}_${checkIn}.xlsx`);
+                XLSX.utils.book_append_sheet(wb, ws, "Scrape_Data");
+                XLSX.writeFile(wb, `Telemetry_${city}_${checkIn}.xlsx`);
             };
 
-            // PDF EXPORT (With Multi-page support)
             const exportToPDF = async () => {
                 if (!dashboardRef.current) return;
                 setIsExporting(true);
-                
                 try {
-                    // Capture the entire dashboard element
-                    const canvas = await html2canvas(dashboardRef.current, { 
-                        scale: 2, // High resolution
-                        useCORS: true, // Allow cross-origin images
-                        backgroundColor: "#f4f7f6"
-                    });
-                    
+                    const canvas = await html2canvas(dashboardRef.current, { scale: 2, useCORS: true, backgroundColor: "#f8fafc" });
                     const imgData = canvas.toDataURL("image/png");
                     const pdf = new window.jspdf.jsPDF("p", "mm", "a4");
-                    
-                    // A4 dimensions
                     const pdfWidth = pdf.internal.pageSize.getWidth();
                     const pdfHeight = pdf.internal.pageSize.getHeight();
-                    
-                    // Calculate image dimensions to fit PDF width
                     const imgProps = pdf.getImageProperties(imgData);
                     const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
                     
                     let heightLeft = imgHeight;
                     let position = 0;
-
-                    // Add first page
                     pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
                     heightLeft -= pdfHeight;
-
-                    // Add subsequent pages if the dashboard is long
                     while (heightLeft >= 0) {
-                        position = heightLeft - imgHeight; // Shift image up
+                        position = heightLeft - imgHeight;
                         pdf.addPage();
                         pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
                         heightLeft -= pdfHeight;
                     }
-
-                    pdf.save(`Scrape_Summary_${city}.pdf`);
+                    pdf.save(`Scrape_Report_${city}.pdf`);
                 } catch (error) {
-                    console.error("PDF Export failed", error);
-                    alert("Failed to generate PDF. Please try again.");
+                    alert("PDF Generation Failed");
                 } finally {
                     setIsExporting(false);
                 }
             };
 
-            // Reusable Skeleton Component for Loading State
             const SkeletonLoader = () => (
                 <div className="max-w-6xl mx-auto mt-8 px-4 w-full animate-pulse">
-                    <div className="flex justify-between items-end mb-6">
-                        <div>
-                            <div className="h-8 bg-slate-200 rounded w-48 mb-2"></div>
-                            <div className="h-4 bg-slate-200 rounded w-32"></div>
-                        </div>
-                        <div className="flex gap-3">
-                            <div className="h-10 w-32 bg-slate-200 rounded"></div>
-                            <div className="h-10 w-32 bg-slate-200 rounded"></div>
+                    <div className="flex justify-center mb-8">
+                        <div className="flex items-center gap-3 bg-white/60 px-6 py-3 rounded-full border border-white">
+                            <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-sm font-semibold text-slate-500">Extracting live data for {city}. This takes up to 25s for large regions...</span>
                         </div>
                     </div>
-                    
-                    {/* KPI Cards Skeleton */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        <div className="h-48 bg-white border border-slate-100 rounded-xl shadow-sm"></div>
-                        <div className="h-48 bg-white border border-slate-100 rounded-xl shadow-sm"></div>
-                        <div className="h-48 bg-white border border-slate-100 rounded-xl shadow-sm"></div>
+                        <div className="h-44 glass-card rounded-2xl"></div>
+                        <div className="h-44 glass-card rounded-2xl"></div>
+                        <div className="h-44 glass-card rounded-2xl"></div>
                     </div>
-
-                    {/* List Skeleton */}
                     <div className="space-y-4">
-                        {[1, 2, 3, 4].map(i => (
-                            <div key={i} className="bg-white border border-slate-100 rounded-xl p-4 flex gap-4 shadow-sm h-40">
-                                <div className="w-48 h-full bg-slate-200 rounded-lg"></div>
-                                <div className="flex-1 flex justify-between py-2">
-                                    <div className="w-full">
-                                        <div className="h-4 bg-slate-200 rounded w-16 mb-4"></div>
-                                        <div className="h-6 bg-slate-200 rounded w-3/4 mb-3"></div>
-                                        <div className="h-4 bg-slate-200 rounded w-1/2"></div>
-                                    </div>
-                                    <div className="w-32 border-l border-slate-100 pl-4 flex flex-col justify-center items-end">
-                                        <div className="h-4 bg-slate-200 rounded w-20 mb-3"></div>
-                                        <div className="h-8 bg-slate-200 rounded w-24 mb-2"></div>
-                                        <div className="h-4 bg-slate-200 rounded w-16"></div>
-                                    </div>
-                                </div>
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="glass-card rounded-2xl p-4 flex gap-4 h-36">
+                                <div className="w-48 h-full bg-slate-200/50 rounded-xl"></div>
+                                <div className="flex-1 py-2"><div className="h-4 bg-slate-200/50 rounded w-16 mb-4"></div><div className="h-6 bg-slate-200/50 rounded w-3/4"></div></div>
                             </div>
                         ))}
                     </div>
@@ -314,239 +286,182 @@
             );
 
             return (
-                <div className="pb-12">
-                    {/* Top Navigation */}
-                    <nav className="glass-panel sticky top-0 z-50 shadow-sm border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-orange-600 text-white p-2 rounded-lg shadow-md">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                <div className="pb-16 relative">
+                    
+                    {/* Header */}
+                    <nav className="glass-header sticky top-0 z-50 px-8 py-4 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-2.5 rounded-xl shadow-[0_4px_12px_rgba(234,88,12,0.3)]">
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                             </div>
-                            <span className="text-slate-800 font-extrabold text-2xl tracking-tight">iShop</span>
-                            <span className="text-slate-400 text-sm ml-2 border-l-2 pl-4 border-slate-200 font-medium tracking-wide uppercase">Reward 360 Monitor</span>
+                            <div className="flex flex-col">
+                                <span className="text-slate-900 font-extrabold text-xl tracking-tight leading-none">iShop Rewards</span>
+                                <span className="text-slate-500 text-xs font-semibold tracking-widest uppercase mt-1">Telemetry Dashboard</span>
+                            </div>
                         </div>
                     </nav>
 
-                    {/* Search Bar Segment */}
-                    <div className="bg-white border-b border-slate-200 p-6 flex justify-center shadow-sm relative z-40">
-                        <div className="bg-white rounded-xl shadow-lg shadow-slate-200/50 border border-slate-100 p-2 flex items-center gap-2 w-full max-w-5xl transition-all focus-within:ring-4 focus-within:ring-orange-500/20">
+                    {/* Search Controls */}
+                    <div className="max-w-5xl mx-auto mt-10 px-4 relative z-40">
+                        <div className="glass-card p-2 rounded-2xl flex items-center gap-2">
                             
-                            {/* City Input */}
-                            <div className="flex-1 flex items-center px-4 py-2 border-r border-slate-100 group">
-                                <svg className="w-5 h-5 text-slate-400 mr-3 group-focus-within:text-orange-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            <div className="flex-1 flex items-center px-5 py-3 glass-input rounded-xl mr-1">
+                                <svg className="w-5 h-5 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                 <div className="flex flex-col w-full">
-                                    <input 
-                                        type="text" 
-                                        value={city} 
-                                        onChange={(e) => setCity(e.target.value)}
-                                        className="text-lg font-bold text-slate-800 focus:outline-none w-full bg-transparent placeholder-slate-300"
-                                        placeholder="Enter City"
-                                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                    />
-                                    <span className="text-xs text-slate-400 font-medium">India</span>
+                                    <input type="text" value={city} onChange={(e) => setCity(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                                        className="text-lg font-bold text-slate-800 bg-transparent focus:outline-none w-full placeholder-slate-400" placeholder="Destination" />
+                                    <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mt-0.5">Location</span>
                                 </div>
                             </div>
 
-                            {/* Check In */}
-                            <div className="flex items-center px-4 py-2 border-r border-slate-100 min-w-[160px] group">
-                                <svg className="w-5 h-5 text-slate-400 mr-3 group-focus-within:text-orange-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <div className="flex items-center px-5 py-3 glass-input rounded-xl mr-1 min-w-[170px]">
+                                <svg className="w-5 h-5 text-orange-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 <div className="flex flex-col w-full">
-                                    <input 
-                                        type="date" 
-                                        value={checkIn}
-                                        onChange={handleCheckInChange}
-                                        className="font-bold text-slate-800 text-sm focus:outline-none w-full cursor-pointer bg-transparent"
-                                    />
-                                    <span className="text-xs text-slate-400 font-medium mt-0.5">Check-in</span>
+                                    <input type="date" value={checkIn} onChange={handleCheckInChange} className="font-bold text-slate-800 text-sm bg-transparent focus:outline-none w-full cursor-pointer" />
+                                    <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mt-0.5">Check In</span>
                                 </div>
                             </div>
 
-                            {/* Check Out (Read-only) */}
-                            <div className="flex items-center px-4 py-2 border-r border-slate-100 min-w-[160px]">
-                                <svg className="w-5 h-5 text-slate-300 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                <div className="flex flex-col w-full opacity-70 cursor-not-allowed">
-                                    <input 
-                                        type="date" 
-                                        value={checkOut}
-                                        readOnly
-                                        className="font-bold text-slate-500 text-sm focus:outline-none w-full bg-transparent pointer-events-none"
-                                    />
-                                    <span className="text-xs text-slate-400 font-medium mt-0.5">Check-out (Auto)</span>
+                            <div className="flex items-center px-5 py-3 glass-input rounded-xl mr-1 min-w-[170px] opacity-70">
+                                <div className="flex flex-col w-full pl-8">
+                                    <input type="date" value={checkOut} readOnly className="font-bold text-slate-600 text-sm bg-transparent focus:outline-none w-full pointer-events-none" />
+                                    <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mt-0.5">Check Out</span>
                                 </div>
                             </div>
 
-                            {/* Guests (Locked) */}
-                            <div className="flex items-center px-4 py-2 min-w-[160px] opacity-70">
-                                <svg className="w-5 h-5 text-slate-300 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                <div className="flex flex-col">
-                                    <span className="font-bold text-slate-500 text-sm">2 Guests, 1 Room</span>
-                                    <span className="text-xs text-slate-400 font-medium mt-0.5">Constant</span>
-                                </div>
-                            </div>
-
-                            {/* Search Button */}
-                            <button 
-                                onClick={handleSearch}
-                                disabled={loading}
-                                className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3.5 px-8 rounded-lg shadow-[0_4px_14px_0_rgba(234,88,12,0.39)] hover:shadow-[0_6px_20px_rgba(234,88,12,0.23)] hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none ml-2 flex items-center gap-2"
-                            >
-                                {loading ? (
-                                    <><svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Searching</>
-                                ) : 'Search'}
+                            <button onClick={handleSearch} disabled={loading}
+                                className="bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 px-10 rounded-xl shadow-[0_4px_20px_rgba(15,23,42,0.3)] transition-all duration-300 disabled:opacity-50 disabled:shadow-none flex items-center">
+                                {loading ? 'Running...' : 'Execute'}
                             </button>
                         </div>
                     </div>
 
-                    {/* Animated Skeleton Loading State */}
                     {loading && <SkeletonLoader />}
 
-                    {/* Error State */}
                     {error && !loading && (
-                        <div className="flex flex-col items-center justify-center mt-32 text-center animate-in fade-in zoom-in duration-300">
-                            <div className="bg-white p-6 rounded-full shadow-sm mb-4">
-                                <svg className="w-16 h-16 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <div className="max-w-md mx-auto mt-24 text-center glass-card p-10 rounded-3xl animate-in fade-in zoom-in duration-300">
+                            <div className="bg-slate-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-slate-200">
+                                <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </div>
-                            <h3 className="text-2xl font-bold text-slate-700">No Data Available</h3>
-                            <p className="text-slate-500 mt-2 max-w-md">{error}</p>
+                            <h3 className="text-xl font-bold text-slate-800 mb-2">No Results Found</h3>
+                            <p className="text-sm text-slate-500 font-medium leading-relaxed">{error}</p>
                         </div>
                     )}
 
-                    {/* Main Dashboard Workspace */}
                     {!loading && hotels.length > 0 && (
-                        <div className="max-w-6xl mx-auto mt-8 px-4 animate-in fade-in slide-in-from-bottom-4 duration-500" ref={dashboardRef}>
+                        <div className="max-w-6xl mx-auto mt-10 px-4 animate-in fade-in slide-in-from-bottom-8 duration-500" ref={dashboardRef}>
                             
-                            {/* Header Section */}
-                            <div className="flex justify-between items-end mb-6 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                            {/* Dashboard Header */}
+                            <div className="flex justify-between items-end mb-8">
                                 <div>
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <h1 className="text-3xl font-extrabold text-slate-900">{city}, India</h1>
-                                        <span className="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full border border-green-200">LIVE</span>
+                                    <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">{city}</h1>
+                                    <div className="flex items-center gap-3">
+                                        <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-100/80 px-2.5 py-1 rounded-md border border-emerald-200">
+                                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                                            LIVE TELEMETRY
+                                        </span>
+                                        <span className="text-slate-500 text-sm font-semibold">{hotels.length} Properties Analyzed</span>
                                     </div>
-                                    <p className="text-slate-500 font-medium">{hotels.length} properties scraped & verified</p>
                                 </div>
                                 <div className="flex gap-3" data-html2canvas-ignore="true">
-                                    <button onClick={exportToExcel} className="flex items-center text-sm font-bold bg-white text-green-700 border border-green-200 px-5 py-2.5 rounded-lg shadow-sm hover:bg-green-50 hover:border-green-300 hover:-translate-y-0.5 transition-all">
-                                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                        Excel / CSV
+                                    <button onClick={exportToExcel} className="glass-card flex items-center text-sm font-bold text-slate-700 px-5 py-2.5 rounded-xl hover:bg-white transition-all">
+                                        Export Data
                                     </button>
-                                    <button onClick={exportToPDF} disabled={isExporting} className="flex items-center text-sm font-bold bg-white text-blue-700 border border-blue-200 px-5 py-2.5 rounded-lg shadow-sm hover:bg-blue-50 hover:border-blue-300 hover:-translate-y-0.5 transition-all disabled:opacity-50">
-                                        {isExporting ? (
-                                            <><svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-700" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating...</>
-                                        ) : (
-                                            <><svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg> Report PDF</>
-                                        )}
+                                    <button onClick={exportToPDF} disabled={isExporting} className="bg-white border border-slate-200 shadow-sm flex items-center text-sm font-bold text-orange-600 px-5 py-2.5 rounded-xl hover:bg-orange-50 transition-all disabled:opacity-50">
+                                        {isExporting ? 'Generating...' : 'Download Report'}
                                     </button>
                                 </div>
                             </div>
 
-                            {/* KPI Cards Row */}
+                            {/* KPI Grid */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                                
-                                {/* CT Win Rate */}
-                                <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 border border-orange-200 rounded-2xl p-6 flex flex-col items-center justify-center shadow-sm hover:shadow-md transition-shadow">
-                                    <h3 className="text-orange-800 font-extrabold text-xs tracking-[0.2em] uppercase mb-3">Cleartrip Win Rate</h3>
-                                    <div className="text-6xl font-black text-slate-900 drop-shadow-sm">{ctWinRate}%</div>
-                                    <div className="flex items-center gap-1.5 mt-3">
-                                        <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                                        <p className="text-orange-700 text-xs font-semibold">Cheapest vs Competitors</p>
+                                <div className="glass-card rounded-3xl p-8 flex flex-col justify-center relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-6 opacity-10">
+                                        <svg className="w-24 h-24 text-orange-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 22h20L12 2z"/></svg>
                                     </div>
+                                    <h3 className="text-slate-500 font-bold text-xs tracking-widest uppercase mb-2">Cleartrip Win Rate</h3>
+                                    <div className="text-6xl font-black text-slate-900 tracking-tighter">{ctWinRate}<span className="text-3xl text-slate-400">%</span></div>
+                                    <p className="text-slate-500 text-xs font-semibold mt-4 bg-white/50 inline-block px-3 py-1.5 rounded-lg border border-white w-max">Cheapest Provider</p>
                                 </div>
 
-                                {/* Star Rating Analysis */}
-                                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm h-[220px] flex flex-col hover:shadow-md transition-shadow">
-                                    <h3 className="text-slate-400 font-bold text-xs uppercase tracking-[0.15em] mb-4 text-center">Wins by Star-Rating</h3>
+                                <div className="glass-card rounded-3xl p-6 h-[240px] flex flex-col">
+                                    <h3 className="text-slate-500 font-bold text-xs tracking-widest uppercase mb-4 text-center">Wins by Category</h3>
                                     <div className="flex-grow w-full">
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={starData} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
+                                            <BarChart data={starData} layout="vertical" margin={{ top: 0, right: 20, left: -20, bottom: 0 }}>
                                                 <XAxis type="number" hide />
-                                                <YAxis dataKey="name" type="category" width={60} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 12, fontWeight: 600}} />
-                                                <Tooltip cursor={{fill: '#f1f5f9'}} contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
-                                                <Legend iconType="circle" wrapperStyle={{fontSize: '11px', fontWeight: 600, paddingTop: '10px'}} />
-                                                <Bar dataKey="CT Win" stackId="a" fill="#ea580c" barSize={16} radius={[0, 0, 0, 0]} />
-                                                <Bar dataKey="Comp Win" stackId="a" fill="#cbd5e1" radius={[0, 6, 6, 0]} />
+                                                <YAxis dataKey="name" type="category" domain={[25, 60]} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11, fontWeight: 700}} />
+                                                <Tooltip cursor={{fill: 'rgba(255,255,255,0.4)'}} contentStyle={{borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
+                                                <Legend iconType="circle" wrapperStyle={{fontSize: '10px', fontWeight: 700, paddingTop: '10px'}} />
+                                                <Bar dataKey="CT Win" stackId="a" fill="#ea580c" barSize={12} radius={[0, 0, 0, 0]} />
+                                                <Bar dataKey="Comp Win" stackId="a" fill="#cbd5e1" radius={[0, 4, 4, 0]} />
                                             </BarChart>
                                         </ResponsiveContainer>
                                     </div>
                                 </div>
 
-                                {/* Supplier Coverage */}
-                                <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm h-[220px] flex flex-col relative hover:shadow-md transition-shadow">
-                                    <h3 className="text-slate-400 font-bold text-xs uppercase tracking-[0.15em] mb-2 text-center absolute top-5 w-full left-0">Supplier Presence</h3>
-                                    <div className="flex-grow w-full mt-6">
+                                <div className="glass-card rounded-3xl p-6 h-[240px] flex flex-col relative">
+                                    <h3 className="text-slate-500 font-bold text-xs tracking-widest uppercase mb-2 text-center absolute top-6 w-full left-0">Market Distribution</h3>
+                                    <div className="flex-grow w-full mt-8">
                                         <ResponsiveContainer width="100%" height="100%">
                                             <PieChart>
-                                                <Pie data={supplierShare} innerRadius={55} outerRadius={75} paddingAngle={4} dataKey="value" stroke="none">
+                                                <Pie data={supplierShare} innerRadius={50} outerRadius={70} paddingAngle={3} dataKey="value" stroke="none">
                                                     {supplierShare.map((entry, index) => (
                                                         <Cell key={`cell-${index}`} fill={entry.color} />
                                                     ))}
                                                 </Pie>
-                                                <Legend layout="vertical" verticalAlign="middle" align="right" iconType="circle" wrapperStyle={{fontSize: '11px', fontWeight: 600}} />
-                                                <Tooltip contentStyle={{borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'}} />
+                                                <Legend layout="vertical" verticalAlign="middle" align="right" iconType="circle" wrapperStyle={{fontSize: '10px', fontWeight: 700}} />
+                                                <Tooltip contentStyle={{borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
                                             </PieChart>
                                         </ResponsiveContainer>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Clean Hotel List */}
-                            <div className="space-y-4">
+                            {/* Data List */}
+                            <div className="space-y-3">
                                 {parsedHotels.map((hotel, idx) => (
-                                    <div key={idx} className="bg-white border border-slate-200 rounded-2xl p-4 flex gap-5 shadow-sm hover:shadow-md hover:border-slate-300 transition-all group">
-                                        
-                                        {/* Generic Image */}
-                                        <div className="w-56 h-36 rounded-xl bg-slate-100 overflow-hidden flex-shrink-0 relative">
-                                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent z-10"></div>
-                                            <img src={hotel.image} alt="hotel" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    <div key={idx} className="glass-card rounded-2xl p-3 flex gap-5 hover:bg-white/80 transition-all duration-300 group">
+                                        <div className="w-48 h-32 rounded-xl bg-slate-200 overflow-hidden relative shadow-inner">
+                                            <img src={hotel.image} alt="hotel" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
                                             {hotel.bestSupplier === 'cleartrip' && (
-                                                <div className="absolute bottom-3 left-3 z-20 bg-orange-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm flex items-center gap-1">
-                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                                                    CT WINNER
+                                                <div className="absolute top-2 left-2 bg-orange-500/90 backdrop-blur text-white text-[9px] font-black tracking-wider px-2 py-1 rounded shadow-sm">
+                                                    CT WIN
                                                 </div>
                                             )}
                                         </div>
 
-                                        {/* Details */}
-                                        <div className="flex-1 flex justify-between py-1">
-                                            <div className="flex flex-col justify-between">
-                                                <div>
-                                                    <div className="flex items-center gap-2 mb-2">
-                                                        <span className="bg-slate-100 text-slate-700 text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1 border border-slate-200">
-                                                            {hotel.rating} <span className="text-yellow-500 text-sm leading-none">★</span>
-                                                        </span>
-                                                        <span className="text-xs text-slate-400 font-mono bg-slate-50 px-2 py-1 rounded border border-slate-100">
-                                                            ID: {hotel.ct_hid}
-                                                        </span>
-                                                    </div>
-                                                    <h2 className="text-xl font-extrabold text-slate-900 leading-tight group-hover:text-orange-600 transition-colors">{hotel.name}</h2>
-                                                    <div className="text-slate-500 text-sm flex items-center mt-2 font-medium">
-                                                        <svg className="w-4 h-4 mr-1.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                                        {hotel.location}
-                                                    </div>
+                                        <div className="flex-1 flex justify-between py-1 pr-2">
+                                            <div className="flex flex-col justify-center">
+                                                <div className="flex items-center gap-2 mb-1.5">
+                                                    <span className="text-[10px] font-black text-slate-500 bg-white px-2 py-0.5 rounded border border-slate-200">
+                                                        ★ {hotel.rating}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-slate-400 tracking-wider">ID: {hotel.ct_hid}</span>
                                                 </div>
+                                                <h2 className="text-xl font-bold text-slate-800 leading-tight mb-1 group-hover:text-orange-600 transition-colors">{hotel.name}</h2>
+                                                <p className="text-slate-500 text-xs font-semibold">{hotel.location}</p>
                                             </div>
 
-                                            {/* Single Best Price Focus */}
-                                            <div className="flex flex-col items-end justify-center border-l border-slate-100 pl-6 w-52">
-                                                <div className="text-[11px] text-slate-400 font-bold mb-1 uppercase tracking-widest text-right">Best Price</div>
+                                            <div className="flex flex-col items-end justify-center pl-6">
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Lowest Rate</span>
                                                 {hotel.bestPrice !== "N/A" ? (
                                                     <>
-                                                        <div className="text-3xl font-black text-slate-900 tracking-tight">₹{hotel.bestPrice.toLocaleString('en-IN')}</div>
-                                                        <span className={`text-[11px] font-bold px-2.5 py-1 rounded-md uppercase mt-2 tracking-wide ${
-                                                            hotel.bestSupplier === 'cleartrip' 
-                                                            ? 'bg-orange-100 text-orange-700 border border-orange-200' 
-                                                            : 'bg-slate-100 text-slate-600 border border-slate-200'
+                                                        <div className="text-3xl font-black text-slate-900 tracking-tighter">₹{hotel.bestPrice.toLocaleString('en-IN')}</div>
+                                                        <span className={`text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider mt-1 ${
+                                                            hotel.bestSupplier === 'cleartrip' ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-500'
                                                         }`}>
                                                             {hotel.bestSupplier}
                                                         </span>
                                                     </>
                                                 ) : (
-                                                    <span className="text-slate-400 font-medium bg-slate-50 px-3 py-1 rounded border border-slate-100">Sold Out</span>
+                                                    <span className="bg-slate-100 text-slate-400 font-bold text-xs px-3 py-1 rounded">Unavailable</span>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-
                         </div>
                     )}
                 </div>
