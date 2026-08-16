@@ -91,7 +91,6 @@
         };
 
         const App = () => {
-            // Always starts locked on fresh open or page reload
             const [isAuthenticated, setIsAuthenticated] = useState(false);
             const [mpin, setMpin] = useState("");
             const [authError, setAuthError] = useState(false);
@@ -384,7 +383,6 @@
                     <div className="max-w-5xl mx-auto mt-6 md:mt-12 px-4 relative z-40">
                         <div className="glass-card p-3 rounded-3xl flex flex-col md:flex-row items-center gap-3 shadow-xl">
                             
-                            <!-- Search box acting as dropdown selector with zero cursor -->
                             <div className="flex-1 flex items-center px-4 md:px-5 py-3.5 glass-input rounded-2xl relative w-full select-none" ref={dropdownRef} onClick={() => setShowDropdown(!showDropdown)}>
                                 <svg className="w-5 h-5 text-slate-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                 <div className="flex flex-col w-full relative">
