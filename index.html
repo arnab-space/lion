@@ -111,7 +111,10 @@
             defaultCheckOut.setDate(defaultCheckOut.getDate() + 1);
 
             const [city, setCity] = useState("Kolkata");
-            const [citiesList, setCitiesList] = useState(["Kolkata", "Mumbai", "Delhi", "Bengaluru", "Dubai", "New York"]);
+            const [citiesList, setCitiesList] = useState([
+                "Kolkata", "Mumbai", "Delhi", "Bengaluru", "Chennai", "Hyderabad", "Pune", 
+                "Ahmedabad", "Jaipur", "Goa", "Dubai", "New York", "Singapore", "Bangkok", "London"
+            ]);
             const [filteredCities, setFilteredCities] = useState([]);
             const [showDropdown, setShowDropdown] = useState(false);
             const [checkIn, setCheckIn] = useState(formatDate(defaultCheckIn));
