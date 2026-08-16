@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>class monitor - this cm can improve our cm</title>
+    <title>class monitor - by cleartrip</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -147,10 +147,19 @@
             );
         };
 
-        const OrangeI = () => (
+        // Serious dot (Preserved styling)
+        const OrangeISerious = () => (
             <span className="relative inline-block leading-none text-slate-900 mx-[1px]">
                 ı
                 <span className="absolute bg-orange-500 rounded-full" style={{ width: '0.20em', height: '0.20em', top: '0.10em', left: '3px', right: '2px', margin: 'auto' }}></span>
+            </span>
+        );
+
+        // Monitor dot (New precise styling)
+        const OrangeIMonitor = () => (
+            <span className="relative inline-block leading-none text-slate-900 mx-[1px]">
+                ı
+                <span className="absolute bg-orange-500 rounded-full" style={{ width: '0.2em', height: '0.2em', top: '0.04em', left: '1px', right: '2px', margin: 'auto' }}></span>
             </span>
         );
 
@@ -220,60 +229,68 @@
             };
 
             return (
-                <div className={`bg-white/95 backdrop-blur-3xl p-8 md:p-12 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] border border-white max-w-sm w-full text-center transition-all duration-700 pointer-events-auto relative overflow-hidden ${isShattering ? 'scale-125 opacity-0 filter blur-xl brightness-150' : 'scale-100 opacity-100 filter blur-0 brightness-100'} ${isShaking ? 'animate-shake' : ''}`}>
+                <>
+                    {/* Error Background Gradient behind the lock card */}
+                    <div 
+                        className={`fixed inset-0 pointer-events-none transition-opacity duration-300 z-0 ${isShaking ? 'opacity-100' : 'opacity-0'}`} 
+                        style={{ background: 'radial-gradient(circle at center, rgba(254, 202, 202, 0.7) 0%, rgba(254, 226, 226, 0.2) 60%, transparent 100%)' }}
+                    />
                     
-                    <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full pointer-events-none mix-blend-overlay z-0">
-                        <g style={{ opacity: 0.6 }}>
-                            <path d="M50,70 L20,0 L0,10" stroke="#000" strokeWidth="0.3" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 1 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-                            <path d="M50,70 L85,0 L100,10" stroke="#fff" strokeWidth="0.5" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 1 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-                            <path d="M50,70 L100,50 L100,60" stroke="#000" strokeWidth="0.4" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 2 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-                            <path d="M30,30 L0,50" stroke="#fff" strokeWidth="0.6" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 2 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-                            <path d="M50,70 L20,100" stroke="#fff" strokeWidth="0.7" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 3 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.2s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-                            <path d="M70,80 L100,100" stroke="#000" strokeWidth="0.5" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 3 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-                        </g>
-                    </svg>
-
-                    <div className="relative z-10 flex flex-col items-center">
-                        <div className="flex flex-col items-center justify-center mb-6">
-                            <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mb-2 border border-slate-200">
-                                <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-                            </div>
-                            <span className="text-[10px] font-bold text-slate-500 tracking-widest lowercase">session locked</span>
-                        </div>
-
-                        <div className="flex items-center justify-center gap-2 mb-1">
-                            <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-none mb-0 flex items-center">
-                                class mon<OrangeI />tor
-                            </h2>
-                            <div className="mt-1"><ByCleartrip /></div>
-                        </div>
-                        <p className="text-[10px] font-bold text-slate-500 lowercase tracking-widest mb-8">this <em>cm</em> can improve our <em>cm</em></p>
+                    <div className={`bg-white/95 backdrop-blur-3xl p-8 md:p-12 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] border border-white max-w-sm w-full text-center transition-all duration-700 pointer-events-auto relative overflow-hidden z-10 ${isShattering ? 'scale-125 opacity-0 filter blur-xl brightness-150' : 'scale-100 opacity-100 filter blur-0 brightness-100'} ${isShaking ? 'animate-shake' : ''}`}>
                         
-                        <div className="space-y-2 relative mx-auto w-4/5 mt-2">
-                            <div className="relative w-full h-12 border border-slate-200 bg-white/50 rounded-xl overflow-hidden shadow-sm transition-colors focus-within:border-slate-400 focus-within:bg-white">
-                                <input 
-                                    type="text" 
-                                    inputMode="numeric"
-                                    maxLength="4" 
-                                    value={mpin} 
-                                    onChange={handleMpinChange}
-                                    autoFocus
-                                    className="absolute inset-0 w-full h-full text-transparent bg-transparent focus:outline-none z-10 caret-transparent"
-                                />
-                                <div className="absolute inset-0 flex items-center justify-center gap-3 pointer-events-none z-0">
-                                    {[0, 1, 2, 3].map((idx) => (
-                                        <span key={idx} className={`text-4xl font-black mt-3 flex items-center justify-center h-full transition-all duration-200 ${idx < mpin.length ? 'text-slate-900 scale-110' : 'text-slate-300 scale-100'}`}>
-                                            *
-                                        </span>
-                                    ))}
+                        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full pointer-events-none mix-blend-overlay z-0">
+                            <g style={{ opacity: 0.6 }}>
+                                <path d="M50,70 L20,0 L0,10" stroke="#000" strokeWidth="0.3" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 1 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
+                                <path d="M50,70 L85,0 L100,10" stroke="#fff" strokeWidth="0.5" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 1 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
+                                <path d="M50,70 L100,50 L100,60" stroke="#000" strokeWidth="0.4" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 2 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
+                                <path d="M30,30 L0,50" stroke="#fff" strokeWidth="0.6" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 2 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
+                                <path d="M50,70 L20,100" stroke="#fff" strokeWidth="0.7" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 3 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.2s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
+                                <path d="M70,80 L100,100" stroke="#000" strokeWidth="0.5" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 3 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
+                            </g>
+                        </svg>
+
+                        <div className="relative z-10 flex flex-col items-center">
+                            <div className="flex flex-col items-center justify-center mb-6">
+                                <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mb-2 border border-slate-200">
+                                    <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                                 </div>
+                                <span className="text-[10px] font-bold text-slate-500 tracking-widest lowercase">session locked</span>
                             </div>
-                            <div className="h-4 mt-2">
-                                {authError && <p className="text-[10px] font-bold text-slate-600 animate-in fade-in slide-in-from-bottom-1">invalid mpin. please try again.</p>}
+
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-none mb-1">
+                                class mon<OrangeIMonitor />tor
+                            </h2>
+                            <div className="mb-2 mt-1">
+                                <ByCleartrip />
+                            </div>
+                            <p className="text-[10px] font-bold text-slate-500 lowercase tracking-widest mb-8">this <em>cm</em> can improve our <em>cm</em></p>
+                            
+                            <div className="space-y-2 relative mx-auto w-4/5 mt-2">
+                                <div className="relative w-full h-12 border border-slate-200 bg-white/50 rounded-xl overflow-hidden shadow-sm transition-colors focus-within:border-slate-400 focus-within:bg-white">
+                                    <input 
+                                        type="text" 
+                                        inputMode="numeric"
+                                        maxLength="4" 
+                                        value={mpin} 
+                                        onChange={handleMpinChange}
+                                        autoFocus
+                                        className="absolute inset-0 w-full h-full text-transparent bg-transparent focus:outline-none z-10 caret-transparent"
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center gap-3 pointer-events-none z-0">
+                                        {[0, 1, 2, 3].map((idx) => (
+                                            <span key={idx} className={`text-4xl font-black mt-3 flex items-center justify-center h-full transition-all duration-200 ${idx < mpin.length ? 'text-slate-900 scale-110' : 'text-slate-300 scale-100'}`}>
+                                                *
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="h-4 mt-2">
+                                    {authError && <p className="text-[10px] font-bold text-slate-600 animate-in fade-in slide-in-from-bottom-1">invalid mpin. please try again.</p>}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </>
             );
         };
 
@@ -568,8 +585,8 @@
                         <div className={`w-full flex flex-col items-center transition-all duration-700 ${hasSearched ? 'mb-4' : 'mb-8'}`}>
                             {!hasSearched && (
                                 <div className="text-center mb-6 pointer-events-none">
-                                    <h1 className="text-4xl md:text-6xl font-black text-slate-800 tracking-tighter mb-2">
-                                        why so ser<OrangeI />ous?
+                                    <h1 className="text-4xl md:text-6xl font-black text-slate-800 tracking-tighter mb-2 flex items-center justify-center">
+                                        why so ser<OrangeISerious />ous?
                                     </h1>
                                     <p className="text-sm font-bold text-slate-500 lowercase tracking-widest mt-2">always at your service (24*7)</p>
                                 </div>
@@ -880,7 +897,7 @@
                         <div className="flex flex-col justify-center">
                             <div className="flex items-center gap-2">
                                 <span className="font-extrabold text-lg md:text-xl tracking-tight leading-none text-slate-800 flex items-center">
-                                    class mon<OrangeI />tor
+                                    class mon<OrangeIMonitor />tor
                                 </span>
                                 <div className="mt-0.5"><ByCleartrip /></div>
                             </div>
