@@ -122,10 +122,10 @@
             return [year, month, day].join('-');
         };
 
-        const OrangeDot = () => (
-            <span className="relative inline-block leading-none">
-                ı
-                <span className="absolute bg-orange-500 rounded-full" style={{ width: '0.22em', height: '0.22em', top: '-0.45em', left: '0.45em' }}></span>
+        const OrangeI = () => (
+            <span className="inline-block relative" style={{ width: '0.3em', height: '1em', verticalAlign: '-0.05em' }}>
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2">ı</span>
+                <span className="absolute top-[0.1em] left-1/2 -translate-x-1/2 w-[0.22em] h-[0.22em] bg-orange-500 rounded-full"></span>
             </span>
         );
 
@@ -205,7 +205,7 @@
                         </div>
 
                         <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-0">
-                            class mon<OrangeDot />tor
+                            class mon<OrangeI />tor
                         </h2>
                         <p className="text-[10px] font-bold text-slate-500 lowercase tracking-widest mb-8">this <em>cm</em> can improve our <em>cm</em></p>
                         
@@ -521,13 +521,13 @@
             return (
                 <div className={activeMode === mode ? 'block' : 'hidden'}>
                     
-                    <div className={`transition-all duration-700 ease-in-out w-full max-w-5xl mx-auto px-4 flex flex-col items-center relative ${showDropdown ? 'z-[99999]' : 'z-40'} ${hasSearched ? 'mt-6' : 'min-h-[calc(100vh-120px)] justify-center pb-[5vh]'}`}>
+                    <div className={`transition-all duration-700 ease-in-out w-full max-w-5xl mx-auto px-4 flex flex-col items-center relative ${showDropdown ? 'z-[9999]' : 'z-40'} ${hasSearched ? 'mt-6' : 'min-h-[calc(100vh-120px)] justify-center pb-[5vh]'}`}>
                         
                         <div className={`w-full flex flex-col items-center transition-all duration-700 ${hasSearched ? 'mb-4' : 'mb-8'}`}>
                             {!hasSearched && (
                                 <div className="text-center mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pointer-events-none">
                                     <h1 className="text-4xl md:text-6xl font-black text-slate-800 tracking-tighter mb-2">
-                                        why so ser<OrangeDot />ous?
+                                        why so ser<OrangeI />ous?
                                     </h1>
                                     <p className="text-sm font-bold text-slate-500 lowercase tracking-widest">always at your service (24*7)</p>
                                 </div>
@@ -839,7 +839,7 @@
                     <nav className="glass-header sticky top-0 z-[60] px-4 md:px-8 py-4 flex items-center justify-between shadow-sm border-b border-slate-200/50">
                         <div className="flex flex-col justify-center">
                             <span className="font-extrabold text-lg md:text-xl tracking-tight leading-none text-slate-800">
-                                class mon<OrangeDot />tor
+                                class mon<OrangeI />tor
                             </span>
                             <span className="text-slate-500 text-[10px] md:text-[11px] font-bold tracking-widest mt-0.5 lowercase">this <em>cm</em> can improve our <em>cm</em></span>
                         </div>
@@ -869,7 +869,7 @@
                 <div className="relative min-h-screen">
                     <DashboardContainer onLock={() => { setIsLocked(true); setHasShattered(false); }} />
                     
-                    <div className={`fixed inset-0 z-[99999] bg-slate-100/70 backdrop-blur-2xl transition-all duration-700 flex items-center justify-center ${isLocked && !hasShattered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+                    <div className={`fixed inset-0 z-[99999] bg-slate-50 transition-all duration-700 flex items-center justify-center ${isLocked && !hasShattered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                         {isLocked && <LockScreen onUnlock={handleUnlock} />}
                     </div>
                 </div>
