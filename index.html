@@ -110,21 +110,28 @@
             const [mpin, setMpin] = useState("");
             const [authError, setAuthError] = useState(false);
 
-            const handleMpinChange = (e) => {
-                const val = e.target.value;
-                const numericVal = val.replace(/\D/g, "").slice(0, 4);
-                setMpin(numericVal);
-                
-                if (numericVal.length === 4) {
-                    if (numericVal === "2141" || numericVal === "7003") {
-                        onUnlock();
+            useEffect(() => {
+                if (mpin.length === 4) {
+                    if (mpin === "2141" || mpin === "7003") {
+                        const timer = setTimeout(() => {
+                            onUnlock();
+                        }, 150);
+                        return () => clearTimeout(timer);
                     } else {
-                        setAuthError(true);
-                        setMpin("");
+                        const timer = setTimeout(() => {
+                            setAuthError(true);
+                            setMpin("");
+                        }, 200);
+                        return () => clearTimeout(timer);
                     }
                 } else {
                     setAuthError(false);
                 }
+            }, [mpin, onUnlock]);
+
+            const handleMpinChange = (e) => {
+                const val = e.target.value;
+                setMpin(val.replace(/\D/g, "").slice(0, 4));
             };
 
             return (
@@ -485,7 +492,7 @@
                                         <ResponsiveContainer width="100%" height="100%">
                                             <BarChart data={starData} layout="vertical" margin={{ top: 0, right: 20, left: -20, bottom: 0 }}>
                                                 <XAxis type="number" domain={[25, 60]} hide />
-                                                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11, fontWeight: 700}} />
+                                                <YAxis dataKey="name" type="category" hide />
                                                 <Tooltip cursor={{fill: 'rgba(255,255,255,0.4)'}} contentStyle={{borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -3px rgb(0 0 0 / 0.1)'}} />
                                                 <Legend iconType="circle" wrapperStyle={{fontSize: '10px', fontWeight: 700, paddingTop: '10px'}} />
                                                 <Bar dataKey="ct win" stackId="a" fill="#ea580c" barSize={12} />
@@ -574,7 +581,7 @@
                                 ))}
                             </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             );
         };
