@@ -93,8 +93,7 @@
                 e.preventDefault();
                 if (mpin === "2141" || mpin === "7003") {
                     sessionStorage.setItem("ishop_auth", "true");
-                    setIsAuthenticated(true);
-                    setAuthError(false);
+                    window.location.reload();
                 } else {
                     setAuthError(true);
                     setMpin("");
