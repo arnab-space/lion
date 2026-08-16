@@ -137,10 +137,20 @@
             return [year, month, day].join('-');
         };
 
+        const renderCustomBarLabel = (props) => {
+            const { x, y, width, height, value } = props;
+            if (!value) return null;
+            return (
+                <text x={x + width + 8} y={y + height / 2} fill="#64748b" fontSize={10} fontWeight={700} dy={3} textAnchor="start">
+                    {value}
+                </text>
+            );
+        };
+
         const OrangeI = () => (
-            <span className="relative inline-block leading-none text-slate-900">
+            <span className="relative inline-block leading-none text-slate-900 mx-[1px]">
                 ı
-                <span className="absolute bg-orange-500 rounded-full left-1/2 -translate-x-1/2" style={{ width: '0.24em', height: '0.24em', top: '-0.15em' }}></span>
+                <span className="absolute bg-orange-500 rounded-full" style={{ width: '0.24em', height: '0.24em', top: '0.12em', left: '0', right: '0', margin: 'auto' }}></span>
             </span>
         );
 
@@ -150,7 +160,7 @@
                     <div className="absolute inset-0 bg-slate-300 rounded-full animate-ping opacity-75"></div>
                     <div className="absolute inset-2 bg-slate-200 rounded-full animate-pulse"></div>
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="inline-block text-5xl">🕵️‍♂️</span>
+                        <span className="inline-block text-3xl">🕵️‍♂️</span>
                     </div>
                 </div>
                 {progress ? (
@@ -538,7 +548,7 @@
             return (
                 <div className={activeMode === mode ? 'block' : 'hidden'}>
                     
-                    <div className={`transition-all duration-700 ease-in-out w-full max-w-5xl mx-auto px-4 flex flex-col items-center relative z-40 ${hasSearched ? 'mt-6' : 'min-h-[calc(100vh-120px)] justify-center pb-[5vh]'}`}>
+                    <div className={`transition-all duration-700 ease-in-out w-full max-w-5xl mx-auto px-4 flex flex-col items-center relative ${showDropdown ? 'z-[99999]' : 'z-40'} ${hasSearched ? 'mt-6' : 'min-h-[calc(100vh-120px)] justify-center pb-[5vh]'}`}>
                         
                         <div className={`w-full flex flex-col items-center transition-all duration-700 ${hasSearched ? 'mb-4' : 'mb-8'}`}>
                             {!hasSearched && (
@@ -685,10 +695,10 @@
                                                 <YAxis dataKey="name" type="category" width={55} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11, fontWeight: 700}} />
                                                 <Tooltip cursor={{fill: 'rgba(255,255,255,0.4)'}} contentStyle={{borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -3px rgb(0 0 0 / 0.1)'}} />
                                                 <Legend iconType="circle" wrapperStyle={{fontSize: '10px', fontWeight: 700, paddingTop: '10px'}} />
-                                                <Bar dataKey="ct win" stackId="a" fill="#334155" barSize={12} radius={[4, 0, 0, 4]}>
-                                                    <LabelList dataKey="ctPercent" position="right" fill="#64748b" fontSize={10} fontWeight={700} />
+                                                <Bar dataKey="ct win" stackId="a" fill="#334155" barSize={12} radius={[4, 0, 0, 4]} />
+                                                <Bar dataKey="comp win" stackId="a" fill="#cbd5e1" radius={[0, 4, 4, 0]}>
+                                                    <LabelList dataKey="ctPercent" content={renderCustomBarLabel} />
                                                 </Bar>
-                                                <Bar dataKey="comp win" stackId="a" fill="#cbd5e1" radius={[0, 4, 4, 0]} />
                                             </BarChart>
                                         </ResponsiveContainer>
                                     </div>
