@@ -26,9 +26,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        * {
-            caret-color: transparent !important;
-        }
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #f8fafc;
@@ -74,23 +71,6 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-
-        /* Premium Lock Screen Ambient Animations */
-        @keyframes blob {
-            0% { transform: translate(0px, 0px) scale(1); }
-            33% { transform: translate(30px, -50px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
-            100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob {
-            animation: blob 10s infinite;
-        }
-        .animation-delay-2000 {
-            animation-delay: 2s;
-        }
-        .animation-delay-4000 {
-            animation-delay: 4s;
-        }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
@@ -100,12 +80,19 @@
         const { useState, useEffect, useMemo, useRef } = React;
         const { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell } = window.Recharts;
 
-        // Monochrome color palette for charts
+        const DEFAULT_CITIES = [
+            "kolkata", "mumbai", "delhi", "bengaluru", "chennai", "hyderabad", "pune", 
+            "ahmedabad", "jaipur", "goa", "dubai", "new york", "singapore", "bangkok", 
+            "london", "gurgaon", "noida", "chandigarh", "kochi", "varanasi", "agra", 
+            "amritsar", "shimla", "manali", "ooty", "mysuru", "patna", "bhopal", 
+            "indore", "lucknow", "surat", "nagpur", "visakhapatnam", "vadodara", "coimbatore"
+        ];
+
         const SUP_COLORS = {
-            cleartrip: "#0f172a", // slate-900
-            makemytrip: "#475569", // slate-600
-            yatra: "#94a3b8", // slate-400
-            tripsure: "#cbd5e1" // slate-300
+            cleartrip: "#0f172a",
+            makemytrip: "#475569",
+            yatra: "#94a3b8",
+            tripsure: "#cbd5e1"
         };
 
         const formatDate = (date) => {
@@ -147,13 +134,13 @@
                     if (mpin === "2141" || mpin === "7003") {
                         const timer = setTimeout(() => {
                             onUnlock();
-                        }, 250);
+                        }, 150);
                         return () => clearTimeout(timer);
                     } else {
                         const timer = setTimeout(() => {
                             setAuthError(true);
                             setMpin("");
-                        }, 300);
+                        }, 200);
                         return () => clearTimeout(timer);
                     }
                 } else {
@@ -167,40 +154,14 @@
             };
 
             return (
-                <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden w-full bg-slate-50/80">
+                <div className="glass-card p-8 md:p-12 rounded-3xl shadow-2xl max-w-md w-full text-center animate-in zoom-in duration-300 pointer-events-auto">
+                    <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-1">
+                        class mon<span className="relative inline-flex items-center">ı<span className="absolute w-2 h-2 bg-orange-500 rounded-full top-[0.1em] left-1/2 -translate-x-1/2 pointer-events-none"></span></span>tor
+                    </h2>
+                    <p className="text-xs font-bold text-slate-500 lowercase tracking-widest mb-8">this <em>cm</em> can improve our <em>cm</em></p>
                     
-                    {/* Ambient Monochromatic Fluid Background */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg h-[400px] pointer-events-none z-0">
-                        <div className="absolute top-0 -left-4 w-72 h-72 bg-slate-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-                        <div className="absolute top-0 -right-4 w-72 h-72 bg-slate-300 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
-                        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-slate-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
-                    </div>
-
-                    {/* Premium Deep Glass Card */}
-                    <div className="relative z-10 p-10 md:p-14 rounded-[2.5rem] shadow-2xl max-w-md w-full text-center animate-in zoom-in duration-500 pointer-events-auto border border-white/80 bg-white/40 backdrop-blur-3xl transform transition-transform hover:scale-[1.02]">
-                        <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-2">
-                            class mon<span className="relative inline-block text-slate-900">i<span className="absolute left-0 top-0 text-orange-500 pointer-events-none" style={{clipPath: "inset(0 0 65% 0)"}}>i</span></span>tor
-                        </h2>
-                        <p className="text-xs font-bold text-slate-500 lowercase tracking-widest mb-10">this <em>cm</em> can improve our <em>cm</em></p>
-                        
-                        <div className="relative">
-                            {/* Interactive 4-Box Matrix */}
-                            <div className="flex justify-center gap-3 md:gap-5 mb-2 pointer-events-none">
-                                {[0, 1, 2, 3].map((index) => (
-                                    <div 
-                                        key={index} 
-                                        className={`w-14 h-16 md:w-16 md:h-20 rounded-2xl flex items-center justify-center text-4xl font-black transition-all duration-300 ${
-                                            mpin.length > index 
-                                            ? 'bg-slate-900 text-white shadow-lg scale-105 border-transparent' 
-                                            : 'bg-white/50 text-transparent border border-slate-300 shadow-inner'
-                                        }`}
-                                    >
-                                        {mpin.length > index ? '*' : ''}
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Invisible physical input spanning the boxes */}
+                    <div className="space-y-3 relative">
+                        <div className="relative w-full glass-input rounded-2xl overflow-hidden">
                             <input 
                                 type="text" 
                                 inputMode="numeric"
@@ -208,13 +169,15 @@
                                 value={mpin} 
                                 onChange={handleMpinChange}
                                 autoFocus
-                                className="absolute inset-0 w-full h-full opacity-0 text-transparent caret-transparent cursor-default z-20"
+                                className="w-full text-center text-3xl font-black py-4 focus:outline-none text-transparent bg-transparent relative z-10 caret-transparent"
                             />
-                            
-                            <div className="h-6 mt-4">
-                                {authError && <p className="text-xs font-bold text-slate-700 animate-in fade-in slide-in-from-bottom-1">invalid mpin. please try again.</p>}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                                <span className="text-3xl font-black tracking-[0.5em] text-black">
+                                    {mpin ? "*".repeat(mpin.length) : <span className="text-slate-300">****</span>}
+                                </span>
                             </div>
                         </div>
+                        {authError && <p className="text-xs font-bold text-slate-700 pt-1">invalid mpin. please try again.</p>}
                     </div>
                 </div>
             );
@@ -476,7 +439,7 @@
                     "makemytrip price": h.rawPrices.makemytrip || "n/a",
                     "yatra price": h.rawPrices.yatra || "n/a",
                     "tripsure price": h.rawPrices.tripsure || "n/a",
-                    "overall best": h.bestSupplier.toUpperCase()
+                    "overall best": h.bestSupplier.toLowerCase()
                 }));
                 const ws = XLSX.utils.json_to_sheet(flatData);
                 const wb = XLSX.utils.book_new();
@@ -495,7 +458,7 @@
                         {!hasSearched && (
                             <div className="text-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pointer-events-none">
                                 <h1 className="text-4xl md:text-6xl font-black text-slate-800 tracking-tighter mb-4">
-                                    why so ser<span className="relative inline-block text-slate-800">i<span className="absolute left-0 top-0 text-orange-500 pointer-events-none" style={{clipPath: "inset(0 0 65% 0)"}}>i</span></span>ous?
+                                    why so ser<span className="relative inline-flex items-center">ı<span className="absolute w-2.5 h-2.5 bg-orange-500 rounded-full top-[0.15em] left-1/2 -translate-x-1/2 pointer-events-none"></span></span>ous?
                                 </h1>
                                 <p className="text-sm font-bold text-slate-500 lowercase tracking-widest">always at your service (24*7)</p>
                             </div>
@@ -783,7 +746,7 @@
                     <nav className="glass-header sticky top-0 z-50 px-4 md:px-8 py-4 flex items-center justify-between shadow-sm border-b border-slate-200/50">
                         <div className="flex flex-col">
                             <span className="font-extrabold text-lg md:text-xl tracking-tight leading-none text-slate-800">
-                                class mon<span className="relative inline-block text-slate-800">i<span className="absolute left-0 top-0 text-orange-500 pointer-events-none" style={{clipPath: "inset(0 0 65% 0)"}}>i</span></span>tor
+                                class mon<span className="relative inline-flex items-center">ı<span className="absolute w-1.5 h-1.5 bg-orange-500 rounded-full top-[0.1em] left-1/2 -translate-x-1/2 pointer-events-none"></span></span>tor
                             </span>
                             <span className="text-slate-500 text-[10px] md:text-[11px] font-bold tracking-widest mt-1 lowercase">this <em>cm</em> can improve our <em>cm</em></span>
                         </div>
