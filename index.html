@@ -102,7 +102,7 @@
                 setError(null);
                 setHotels([]); 
                 try {
-                    // Update this URL if your Cloudflare tunnel restarts and gives a new trycloudflare URL
+                    // Update this URL if your Cloudflare tunnel restarts and generates a new trycloudflare address
                     const TUNNEL_URL = "https://jpeg-farms-throwing-recommend.trycloudflare.com";
                     const API_URL = `${TUNNEL_URL}/scrape?city=${city}&checkin=${checkIn}&checkout=${checkOut}`;
                     
