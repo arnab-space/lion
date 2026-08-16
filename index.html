@@ -105,6 +105,21 @@
             "indore", "lucknow", "surat", "nagpur", "visakhapatnam", "vadodara", "coimbatore"
         ];
 
+        const CITY_STATES = {
+            "kolkata": "west bengal", "mumbai": "maharashtra", "delhi": "delhi",
+            "bengaluru": "karnataka", "chennai": "tamil nadu", "hyderabad": "telangana",
+            "pune": "maharashtra", "ahmedabad": "gujarat", "jaipur": "rajasthan",
+            "goa": "goa", "dubai": "uae", "new york": "new york", "singapore": "singapore",
+            "bangkok": "thailand", "london": "england", "gurgaon": "haryana",
+            "noida": "uttar pradesh", "chandigarh": "chandigarh", "kochi": "kerala",
+            "varanasi": "uttar pradesh", "agra": "uttar pradesh", "amritsar": "punjab",
+            "shimla": "himachal pradesh", "manali": "himachal pradesh", "ooty": "tamil nadu",
+            "mysuru": "karnataka", "patna": "bihar", "bhopal": "madhya pradesh",
+            "indore": "madhya pradesh", "lucknow": "uttar pradesh", "surat": "gujarat",
+            "nagpur": "maharashtra", "visakhapatnam": "andhra pradesh", "vadodara": "gujarat",
+            "coimbatore": "tamil nadu"
+        };
+
         const SUP_COLORS = {
             cleartrip: "#0f172a",
             makemytrip: "#475569",
@@ -122,10 +137,10 @@
             return [year, month, day].join('-');
         };
 
-        const OrangeDot = () => (
-            <span className="relative inline-block leading-none">
+        const OrangeI = () => (
+            <span className="relative inline-block leading-none text-slate-900">
                 ı
-                <span className="absolute bg-orange-500 rounded-full" style={{ width: '0.22em', height: '0.22em', top: '-0.45em', left: '0.45em' }}></span>
+                <span className="absolute bg-orange-500 rounded-full left-1/2 -translate-x-1/2" style={{ width: '0.24em', height: '0.24em', top: '-0.15em' }}></span>
             </span>
         );
 
@@ -134,8 +149,8 @@
                 <div className="relative w-20 h-20 mb-8 grayscale opacity-80">
                     <div className="absolute inset-0 bg-slate-300 rounded-full animate-ping opacity-75"></div>
                     <div className="absolute inset-2 bg-slate-200 rounded-full animate-pulse"></div>
-                    <div className="absolute inset-0 flex items-center justify-center text-4xl">
-                        <span className="animate-bounce">🕵️‍♂️</span>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="inline-block text-5xl">🕵️‍♂️</span>
                     </div>
                 </div>
                 {progress ? (
@@ -205,7 +220,7 @@
                         </div>
 
                         <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-0">
-                            class mon<OrangeDot />tor
+                            class mon<OrangeI />tor
                         </h2>
                         <p className="text-[10px] font-bold text-slate-500 lowercase tracking-widest mb-8">this <em>cm</em> can improve our <em>cm</em></p>
                         
@@ -237,7 +252,7 @@
             );
         };
 
-        const SearchEngine = ({ mode, activeMode, setMode, citiesList }) => {
+        const SearchEngine = ({ mode, activeMode, setMode, citiesList, onLoadStart, onLoadEnd }) => {
             const dropdownRef = useRef(null);
             
             const defaultCheckIn = new Date();
@@ -325,6 +340,7 @@
                     return;
                 }
 
+                onLoadStart();
                 setHasSearched(true);
                 setLoading(true);
                 setError(null);
@@ -363,6 +379,7 @@
                 
                 setLoading(false);
                 setScrapeProgress(null);
+                onLoadEnd();
             };
 
             const { ctWinRate, supplierShare, starData, parsedHotels, cityStats } = useMemo(() => {
@@ -521,22 +538,17 @@
             return (
                 <div className={activeMode === mode ? 'block' : 'hidden'}>
                     
-                    <div className={`transition-all duration-700 ease-in-out w-full max-w-5xl mx-auto px-4 flex flex-col items-center relative ${showDropdown ? 'z-[99999]' : 'z-40'} ${hasSearched ? 'mt-6' : 'min-h-[calc(100vh-120px)] justify-center pb-[5vh]'}`}>
+                    <div className={`transition-all duration-700 ease-in-out w-full max-w-5xl mx-auto px-4 flex flex-col items-center relative z-40 ${hasSearched ? 'mt-6' : 'min-h-[calc(100vh-120px)] justify-center pb-[5vh]'}`}>
                         
                         <div className={`w-full flex flex-col items-center transition-all duration-700 ${hasSearched ? 'mb-4' : 'mb-8'}`}>
                             {!hasSearched && (
-                                <div className="text-center mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pointer-events-none">
+                                <div className="text-center mb-6 pointer-events-none">
                                     <h1 className="text-4xl md:text-6xl font-black text-slate-800 tracking-tighter mb-2">
-                                        why so ser<OrangeDot />ous?
+                                        why so ser<OrangeI />ous?
                                     </h1>
                                     <p className="text-sm font-bold text-slate-500 lowercase tracking-widest">always at your service (24*7)</p>
                                 </div>
                             )}
-
-                            <div className="bg-slate-200/60 p-1 rounded-xl inline-flex shadow-inner backdrop-blur-md">
-                                <button onClick={() => setMode('single')} className={`px-6 py-2 text-xs font-black rounded-lg transition-all ${activeMode==='single'?'bg-white shadow-md text-slate-800':'text-slate-500 hover:text-slate-700'}`}>single city</button>
-                                <button onClick={() => setMode('bulk')} className={`px-6 py-2 text-xs font-black rounded-lg transition-all ${activeMode==='bulk'?'bg-white shadow-md text-slate-800':'text-slate-500 hover:text-slate-700'}`}>bulk process (beta)</button>
-                            </div>
                         </div>
 
                         <div className="glass-card p-3 rounded-3xl flex flex-col md:flex-row items-center gap-3 shadow-xl w-full">
@@ -638,7 +650,9 @@
                             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                                 <div>
                                     <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-2">
-                                        {mode === 'single' ? lastSearchedCity : 'overall telemetry'}
+                                        {mode === 'single' ? (
+                                            <>{lastSearchedCity}{CITY_STATES[lastSearchedCity] ? `, ${CITY_STATES[lastSearchedCity]}` : ''}</>
+                                        ) : 'overall telemetry'}
                                     </h1>
                                     <div className="flex items-center gap-3">
                                         <span className="flex items-center gap-1.5 text-xs font-bold text-slate-700 bg-slate-200/80 px-3 py-1 rounded-full border border-slate-300">
@@ -671,10 +685,10 @@
                                                 <YAxis dataKey="name" type="category" width={55} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11, fontWeight: 700}} />
                                                 <Tooltip cursor={{fill: 'rgba(255,255,255,0.4)'}} contentStyle={{borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -3px rgb(0 0 0 / 0.1)'}} />
                                                 <Legend iconType="circle" wrapperStyle={{fontSize: '10px', fontWeight: 700, paddingTop: '10px'}} />
-                                                <Bar dataKey="ct win" stackId="a" fill="#334155" barSize={12} radius={[4, 0, 0, 4]} />
-                                                <Bar dataKey="comp win" stackId="a" fill="#cbd5e1" radius={[0, 4, 4, 0]}>
+                                                <Bar dataKey="ct win" stackId="a" fill="#334155" barSize={12} radius={[4, 0, 0, 4]}>
                                                     <LabelList dataKey="ctPercent" position="right" fill="#64748b" fontSize={10} fontWeight={700} />
                                                 </Bar>
+                                                <Bar dataKey="comp win" stackId="a" fill="#cbd5e1" radius={[0, 4, 4, 0]} />
                                             </BarChart>
                                         </ResponsiveContainer>
                                     </div>
@@ -819,6 +833,7 @@
         const DashboardContainer = ({ onLock }) => {
             const [searchMode, setSearchMode] = useState('single');
             const [citiesList, setCitiesList] = useState(DEFAULT_CITIES);
+            const [tabStatus, setTabStatus] = useState({ single: 'idle', bulk: 'idle' });
 
             useEffect(() => {
                 fetch('city_database.json')
@@ -839,9 +854,27 @@
                     <nav className="glass-header sticky top-0 z-[60] px-4 md:px-8 py-4 flex items-center justify-between shadow-sm border-b border-slate-200/50">
                         <div className="flex flex-col justify-center">
                             <span className="font-extrabold text-lg md:text-xl tracking-tight leading-none text-slate-800">
-                                class mon<OrangeDot />tor
+                                class mon<OrangeI />tor
                             </span>
                             <span className="text-slate-500 text-[10px] md:text-[11px] font-bold tracking-widest mt-0.5 lowercase">this <em>cm</em> can improve our <em>cm</em></span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                            <div className="bg-slate-200/60 p-1 rounded-xl inline-flex shadow-inner backdrop-blur-md">
+                                <button 
+                                    onClick={() => { setSearchMode('single'); setTabStatus(prev => ({...prev, single: 'idle'})); }} 
+                                    className={`px-6 py-2 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${searchMode==='single'?'bg-white shadow-md text-slate-800':'text-slate-500 hover:text-slate-700'}`}>
+                                    single city
+                                    {tabStatus.single === 'loading' && <svg className="animate-spin w-3 h-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>}
+                                    {tabStatus.single === 'completed' && searchMode !== 'single' && <svg className="w-3 h-3 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                                </button>
+                                <button 
+                                    onClick={() => { setSearchMode('bulk'); setTabStatus(prev => ({...prev, bulk: 'idle'})); }} 
+                                    className={`px-6 py-2 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${searchMode==='bulk'?'bg-white shadow-md text-slate-800':'text-slate-500 hover:text-slate-700'}`}>
+                                    bulk process (beta)
+                                    {tabStatus.bulk === 'loading' && <svg className="animate-spin w-3 h-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>}
+                                    {tabStatus.bulk === 'completed' && searchMode !== 'bulk' && <svg className="w-3 h-3 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                                </button>
+                            </div>
                         </div>
                         <div className="flex items-center gap-3">
                             <button onClick={onLock} className="text-xs font-bold text-slate-500 hover:text-slate-900 bg-slate-100/80 px-4 py-2 rounded-xl border border-slate-200 shadow-sm transition-all">
@@ -850,8 +883,8 @@
                         </div>
                     </nav>
 
-                    <SearchEngine mode="single" activeMode={searchMode} setMode={setSearchMode} citiesList={citiesList} />
-                    <SearchEngine mode="bulk" activeMode={searchMode} setMode={setSearchMode} citiesList={citiesList} />
+                    <SearchEngine mode="single" activeMode={searchMode} setMode={setSearchMode} citiesList={citiesList} onLoadStart={() => setTabStatus(p => ({...p, single: 'loading'}))} onLoadEnd={() => setTabStatus(p => ({...p, single: 'completed'}))} />
+                    <SearchEngine mode="bulk" activeMode={searchMode} setMode={setSearchMode} citiesList={citiesList} onLoadStart={() => setTabStatus(p => ({...p, bulk: 'loading'}))} onLoadEnd={() => setTabStatus(p => ({...p, bulk: 'completed'}))} />
                 </div>
             );
         };
@@ -869,7 +902,7 @@
                 <div className="relative min-h-screen">
                     <DashboardContainer onLock={() => { setIsLocked(true); setHasShattered(false); }} />
                     
-                    <div className={`fixed inset-0 z-[99999] bg-slate-100/70 backdrop-blur-2xl transition-all duration-700 flex items-center justify-center ${isLocked && !hasShattered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+                    <div className={`fixed inset-0 z-[999999] bg-slate-50 transition-opacity duration-700 flex items-center justify-center ${isLocked && !hasShattered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                         {isLocked && <LockScreen onUnlock={handleUnlock} />}
                     </div>
                 </div>
