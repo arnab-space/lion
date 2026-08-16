@@ -97,6 +97,21 @@
         const { useState, useEffect, useMemo, useRef } = React;
         const { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell, LabelList } = window.Recharts;
 
+        // SHA-256 Hash Function for Browser Web Crypto
+        const hashMpin = async (pin) => {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(pin);
+            const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+        };
+
+        // Pre-computed SHA-256 Hashes for Authorized PINs (2141 & 7003)
+        const AUTHORIZED_HASHES = [
+            "c528659d4bbdb172f3e8f81014e021a8a25c1106e23ca6e584f932822a106f22", // Hash of 2141
+            "1c0800b3e6e87f8f90c377a06488d550da8f438a0f9a2fbefc0dbec94b967dc1"  // Hash of 7003
+        ];
+
         const DEFAULT_CITIES = [
             "kolkata", "mumbai", "delhi", "bengaluru", "chennai", "hyderabad", "pune", 
             "ahmedabad", "jaipur", "goa", "dubai", "new york", "singapore", "bangkok", 
@@ -147,7 +162,6 @@
             );
         };
 
-        // Serious dot (Preserved styling)
         const OrangeISerious = () => (
             <span className="relative inline-block leading-none text-slate-900 mx-[1px]">
                 ı
@@ -155,7 +169,6 @@
             </span>
         );
 
-        // Monitor dot (New precise styling)
         const OrangeIMonitor = () => (
             <span className="relative inline-block leading-none text-slate-900 mx-[1px]">
                 ı
@@ -202,25 +215,29 @@
             const [isShattering, setIsShattering] = useState(false);
 
             useEffect(() => {
-                if (mpin.length === 4) {
-                    if (mpin === "2141" || mpin === "7003") {
-                        setIsShattering(true);
-                        const timer = setTimeout(() => {
-                            onUnlock();
-                        }, 700); 
-                        return () => clearTimeout(timer);
+                const verifyPin = async () => {
+                    if (mpin.length === 4) {
+                        const inputHash = await hashMpin(mpin);
+                        if (AUTHORIZED_HASHES.includes(inputHash)) {
+                            setIsShattering(true);
+                            const timer = setTimeout(() => {
+                                onUnlock();
+                            }, 700); 
+                            return () => clearTimeout(timer);
+                        } else {
+                            setAuthError(true);
+                            setIsShaking(true);
+                            const timer = setTimeout(() => {
+                                setMpin("");
+                                setIsShaking(false);
+                            }, 400);
+                            return () => clearTimeout(timer);
+                        }
                     } else {
-                        setAuthError(true);
-                        setIsShaking(true);
-                        const timer = setTimeout(() => {
-                            setMpin("");
-                            setIsShaking(false);
-                        }, 400);
-                        return () => clearTimeout(timer);
+                        setAuthError(false);
                     }
-                } else {
-                    setAuthError(false);
-                }
+                };
+                verifyPin();
             }, [mpin, onUnlock]);
 
             const handleMpinChange = (e) => {
@@ -230,7 +247,6 @@
 
             return (
                 <>
-                    {/* Error Background Gradient behind the lock card */}
                     <div 
                         className={`fixed inset-0 pointer-events-none transition-opacity duration-300 z-0 ${isShaking ? 'opacity-100' : 'opacity-0'}`} 
                         style={{ background: 'radial-gradient(circle at center, rgba(254, 202, 202, 0.7) 0%, rgba(254, 226, 226, 0.2) 60%, transparent 100%)' }}
