@@ -125,7 +125,7 @@
         const OrangeDot = () => (
             <span className="relative inline-block leading-none">
                 ı
-                <span className="absolute bg-orange-500 rounded-full left-1/2 -translate-x-1/2" style={{ width: '0.24em', height: '0.24em', top: '-0.20em' }}></span>
+                <span className="absolute bg-orange-500 rounded-full" style={{ width: '0.22em', height: '0.22em', top: '-0.45em', left: '0.45em' }}></span>
             </span>
         );
 
@@ -183,7 +183,7 @@
             };
 
             return (
-                <div className={`bg-white/90 backdrop-blur-3xl p-8 md:p-12 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white/80 max-w-sm w-full text-center transition-all duration-700 pointer-events-auto relative overflow-hidden ${isShattering ? 'scale-125 opacity-0 filter blur-xl brightness-150' : 'scale-100 opacity-100 filter blur-0 brightness-100 animate-in zoom-in duration-300'} ${isShaking ? 'animate-shake' : ''}`}>
+                <div className={`bg-white/95 backdrop-blur-3xl p-8 md:p-12 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] border border-white max-w-sm w-full text-center transition-all duration-700 pointer-events-auto relative overflow-hidden ${isShattering ? 'scale-125 opacity-0 filter blur-xl brightness-150' : 'scale-100 opacity-100 filter blur-0 brightness-100'} ${isShaking ? 'animate-shake' : ''}`}>
                     
                     <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full pointer-events-none mix-blend-overlay z-0">
                         <g style={{ opacity: 0.6 }}>
@@ -857,7 +857,7 @@
         };
 
         const App = () => {
-            const [isLocked, setIsLocked] = useState(true); // Boots up locked by default
+            const [isLocked, setIsLocked] = useState(true);
             const [hasShattered, setHasShattered] = useState(false);
 
             const handleUnlock = () => {
@@ -869,7 +869,7 @@
                 <div className="relative min-h-screen">
                     <DashboardContainer onLock={() => { setIsLocked(true); setHasShattered(false); }} />
                     
-                    <div className={`fixed inset-0 z-[100] bg-slate-100/40 backdrop-blur-md transition-all duration-700 flex items-center justify-center ${isLocked && !hasShattered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+                    <div className={`fixed inset-0 z-[100] bg-slate-100/70 backdrop-blur-xl transition-all duration-700 flex items-center justify-center ${isLocked && !hasShattered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                         {isLocked && <LockScreen onUnlock={handleUnlock} />}
                     </div>
                 </div>
