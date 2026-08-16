@@ -102,7 +102,6 @@
                 setError(null);
                 setHotels([]); 
                 try {
-                    // Update this URL if your Cloudflare tunnel restarts and generates a new trycloudflare address
                     const TUNNEL_URL = "https://jpeg-farms-throwing-recommend.trycloudflare.com";
                     const API_URL = `${TUNNEL_URL}/scrape?city=${city}&checkin=${checkIn}&checkout=${checkOut}`;
                     
@@ -157,8 +156,14 @@
                         }
                     });
 
-                    // Explicitly map hotelId as ct_hid
-                    const ct_hid = hotel.hotelId || hotel.hotelInfo?.hotelId || "N/A";
+                    // Robust CT_HID extraction supporting all possible property ID keys
+                    const ct_hid = hotel.hotelId || 
+                                   hotel.hotelCode || 
+                                   hotel.id || 
+                                   hotel.hotelInfo?.hotelId || 
+                                   hotel.hotelInfo?.hotelCode || 
+                                   hotel.hotelInfo?.id || 
+                                   "N/A";
 
                     processedList.push({
                         ct_hid,
@@ -231,7 +236,12 @@
                 if (!dashboardRef.current) return;
                 setIsExporting(true);
                 try {
-                    const canvas = await html2canvas(dashboardRef.current, { scale: 2, useCORS: true, backgroundColor: "#f8fafc" });
+                    const canvas = await html2canvas(dashboardRef.current, { 
+                        scale: 1.5, 
+                        useCORS: true, 
+                        allowTaint: true, 
+                        backgroundColor: "#f8fafc" 
+                    });
                     const imgData = canvas.toDataURL("image/png");
                     const pdf = new window.jspdf.jsPDF("p", "mm", "a4");
                     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -251,7 +261,8 @@
                     }
                     pdf.save(`Scrape_Report_${city}.pdf`);
                 } catch (error) {
-                    alert("PDF Generation Failed");
+                    console.error("PDF generation error:", error);
+                    alert("PDF Generation Failed. Check console logs for details.");
                 } finally {
                     setIsExporting(false);
                 }
