@@ -26,9 +26,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        * {
-            caret-color: transparent; /* Hides cursor everywhere globally */
-        }
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #f8fafc;
@@ -47,10 +44,6 @@
         }
         input[type="text"] {
             user-select: auto;
-        }
-        /* Allows typing cursor only in the search box */
-        .search-input {
-            caret-color: #1e293b !important; 
         }
         .glass-card {
             background: rgba(255, 255, 255, 0.75);
@@ -79,13 +72,16 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 
-        /* Intuitive Static Pulse Animation */
-        @keyframes ring-pulse {
-            0% { box-shadow: 0 0 0 0 rgba(51, 65, 85, 0.15); }
-            100% { box-shadow: 0 0 0 15px rgba(51, 65, 85, 0); }
+        /* Premium PIN Shake Animation */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-8px); }
+            80% { transform: translateX(8px); }
         }
-        .animate-ring-pulse {
-            animation: ring-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        .animate-shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
         }
     </style>
 </head>
@@ -144,23 +140,27 @@
         const LockScreen = ({ onUnlock }) => {
             const [mpin, setMpin] = useState("");
             const [authError, setAuthError] = useState(false);
+            const [isShaking, setIsShaking] = useState(false);
 
             useEffect(() => {
                 if (mpin.length === 4) {
                     if (mpin === "2141" || mpin === "7003") {
                         const timer = setTimeout(() => {
                             onUnlock();
-                        }, 150);
+                        }, 200);
                         return () => clearTimeout(timer);
                     } else {
+                        setIsShaking(true);
+                        setAuthError(true);
                         const timer = setTimeout(() => {
-                            setAuthError(true);
                             setMpin("");
-                        }, 200);
+                            setIsShaking(false);
+                        }, 500);
                         return () => clearTimeout(timer);
                     }
                 } else {
                     setAuthError(false);
+                    setIsShaking(false);
                 }
             }, [mpin, onUnlock]);
 
@@ -170,14 +170,16 @@
             };
 
             return (
-                <div className="bg-white/80 backdrop-blur-2xl p-8 md:p-12 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white/60 max-w-sm w-full text-center animate-in zoom-in duration-300 pointer-events-auto">
-                    <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-0">
-                        class mon<span className="relative inline-flex items-center">ı<span className="absolute w-1.5 h-1.5 bg-orange-500 rounded-full top-[0.1em] left-1/2 -translate-x-1/2 pointer-events-none"></span></span>tor
+                <div className="bg-white/90 backdrop-blur-3xl p-10 md:p-14 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white/80 max-w-sm w-full text-center animate-in zoom-in duration-300 pointer-events-auto">
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-0 flex items-center justify-center">
+                        class mon<span className="relative flex flex-col items-center mx-[1px]"><span className="w-2 h-2 bg-orange-500 rounded-full mb-[1px]"></span><span className="leading-none" style={{marginTop: '-0.35em'}}>ı</span></span>tor
                     </h2>
-                    <p className="text-[10px] font-bold text-slate-500 lowercase tracking-widest mb-8">this <em>cm</em> can improve our <em>cm</em></p>
+                    <p className="text-[10px] font-bold text-slate-500 lowercase tracking-widest mb-10">this <em>cm</em> can improve our <em>cm</em></p>
                     
-                    <div className="space-y-2 relative mx-auto w-4/5">
-                        <div className="relative w-full h-12 border border-slate-200 bg-white/50 rounded-xl overflow-hidden shadow-sm transition-colors focus-within:border-slate-400 focus-within:bg-white animate-ring-pulse">
+                    <div className={`space-y-4 relative mx-auto w-full max-w-[200px] ${isShaking ? 'animate-shake' : ''}`}>
+                        
+                        <div className="relative flex justify-center gap-6 h-12 items-center cursor-pointer">
+                            {/* Hidden input taking full width/height for easy typing focus */}
                             <input 
                                 type="text" 
                                 inputMode="numeric"
@@ -185,18 +187,26 @@
                                 value={mpin} 
                                 onChange={handleMpinChange}
                                 autoFocus
-                                className="absolute inset-0 w-full h-full text-transparent bg-transparent focus:outline-none z-10 caret-transparent"
+                                className="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer caret-transparent"
                             />
-                            <div className="absolute inset-0 flex items-center justify-center gap-3 pointer-events-none z-0">
-                                {[0, 1, 2, 3].map((idx) => (
-                                    <span key={idx} className={`text-3xl font-black mt-2 transition-all duration-200 ${idx < mpin.length ? 'text-slate-900 scale-110' : 'text-slate-300 scale-100'}`}>
-                                        *
-                                    </span>
-                                ))}
-                            </div>
+                            
+                            {/* Custom Visual Dots */}
+                            {[0, 1, 2, 3].map((idx) => (
+                                <div 
+                                    key={idx} 
+                                    className={`rounded-full transition-all duration-300 ${
+                                        idx < mpin.length 
+                                        ? 'w-4 h-4 bg-slate-900 shadow-md scale-110' 
+                                        : 'w-3 h-3 bg-slate-200 border border-slate-300'
+                                    }`}
+                                />
+                            ))}
                         </div>
-                        <div className="h-4 mt-2">
-                            {authError && <p className="text-[10px] font-bold text-slate-600 animate-in fade-in slide-in-from-bottom-1">invalid mpin. please try again.</p>}
+
+                        <div className="h-4 mt-2 transition-opacity duration-300">
+                            <p className={`text-[10px] font-bold text-slate-600 ${authError ? 'opacity-100' : 'opacity-0'}`}>
+                                invalid mpin
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -297,7 +307,7 @@
                 setShowDropdown(false);
                 setHotels([]); 
                 setListFilter('all');
-                setShowListings(false); // Reset listings to collapsed
+                setShowListings(false);
                 
                 let allResults = [];
                 const TUNNEL_URL = "https://jpeg-farms-throwing-recommend.trycloudflare.com";
@@ -487,14 +497,13 @@
             return (
                 <div className={activeMode === mode ? 'block' : 'hidden'}>
                     
-                    {/* Centered Search Group containing Hero, Tabs, and Input */}
                     <div className={`transition-all duration-700 ease-in-out w-full max-w-5xl mx-auto px-4 flex flex-col items-center relative z-40 ${hasSearched ? 'mt-6' : 'min-h-[calc(100vh-120px)] justify-center pb-[5vh]'}`}>
                         
                         <div className={`w-full flex flex-col items-center transition-all duration-700 ${hasSearched ? 'mb-4' : 'mb-8'}`}>
                             {!hasSearched && (
                                 <div className="text-center mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pointer-events-none">
-                                    <h1 className="text-4xl md:text-6xl font-black text-slate-800 tracking-tighter mb-2">
-                                        why so ser<span className="relative inline-flex items-center">ı<span className="absolute w-2.5 h-2.5 bg-orange-500 rounded-full top-[0.15em] left-1/2 -translate-x-1/2 pointer-events-none"></span></span>ous?
+                                    <h1 className="text-4xl md:text-6xl font-black text-slate-800 tracking-tighter mb-2 flex items-center justify-center">
+                                        why so ser<span className="relative flex flex-col items-center mx-[2px]"><span className="w-2.5 h-2.5 bg-orange-500 rounded-full mb-[2px]"></span><span className="leading-none" style={{marginTop: '-0.3em'}}>ı</span></span>ous?
                                     </h1>
                                     <p className="text-sm font-bold text-slate-500 lowercase tracking-widest">always at your service (24*7)</p>
                                 </div>
@@ -638,10 +647,10 @@
                                                 <YAxis dataKey="name" type="category" width={55} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11, fontWeight: 700}} />
                                                 <Tooltip cursor={{fill: 'rgba(255,255,255,0.4)'}} contentStyle={{borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -3px rgb(0 0 0 / 0.1)'}} />
                                                 <Legend iconType="circle" wrapperStyle={{fontSize: '10px', fontWeight: 700, paddingTop: '10px'}} />
-                                                <Bar dataKey="ct win" stackId="a" fill="#334155" barSize={12} radius={[4, 0, 0, 4]} />
-                                                <Bar dataKey="comp win" stackId="a" fill="#cbd5e1" radius={[0, 4, 4, 0]}>
+                                                <Bar dataKey="ct win" stackId="a" fill="#334155" barSize={12} radius={[4, 0, 0, 4]}>
                                                     <LabelList dataKey="ctPercent" position="right" fill="#64748b" fontSize={10} fontWeight={700} />
                                                 </Bar>
+                                                <Bar dataKey="comp win" stackId="a" fill="#cbd5e1" radius={[0, 4, 4, 0]} />
                                             </BarChart>
                                         </ResponsiveContainer>
                                     </div>
@@ -805,10 +814,10 @@
                 <div className="pb-20 relative min-h-screen">
                     <nav className="glass-header sticky top-0 z-[60] px-4 md:px-8 py-4 flex items-center justify-between shadow-sm border-b border-slate-200/50">
                         <div className="flex flex-col justify-center">
-                            <span className="font-extrabold text-lg md:text-xl tracking-tight leading-none text-slate-800">
-                                class mon<span className="relative inline-flex items-center">ı<span className="absolute w-1.5 h-1.5 bg-orange-500 rounded-full top-[0.1em] left-1/2 -translate-x-1/2 pointer-events-none"></span></span>tor
+                            <span className="font-extrabold text-lg md:text-xl tracking-tight leading-none text-slate-800 flex items-center">
+                                class mon<span className="relative flex flex-col items-center mx-[1px]"><span className="w-1.5 h-1.5 bg-orange-500 rounded-full mb-[1px]"></span><span className="leading-none" style={{marginTop: '-0.35em'}}>ı</span></span>tor
                             </span>
-                            <span className="text-slate-500 text-[10px] md:text-[11px] font-bold tracking-widest -mt-0.5 lowercase">this <em>cm</em> can improve our <em>cm</em></span>
+                            <span className="text-slate-500 text-[10px] md:text-[11px] font-bold tracking-widest mt-0.5 lowercase">this <em>cm</em> can improve our <em>cm</em></span>
                         </div>
                         <div className="flex items-center gap-3">
                             <button onClick={onLock} className="text-xs font-bold text-slate-500 hover:text-slate-900 bg-slate-100/80 px-4 py-2 rounded-xl border border-slate-200 shadow-sm transition-all">
