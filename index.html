@@ -26,6 +26,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
+        * {
+            caret-color: transparent !important;
+        }
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #f8fafc;
@@ -37,6 +40,10 @@
             background-attachment: fixed;
             color: #1e293b;
             text-transform: lowercase;
+            cursor: default;
+        }
+        input, button, select {
+            cursor: pointer;
         }
         .glass-card {
             background: rgba(255, 255, 255, 0.75);
@@ -61,9 +68,6 @@
             box-shadow: 0 0 0 4px rgba(234, 88, 12, 0.1);
             border-color: rgba(234, 88, 12, 0.3);
         }
-        .no-cursor {
-            caret-color: transparent;
-        }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -87,9 +91,8 @@
         };
 
         const App = () => {
-            const [isAuthenticated, setIsAuthenticated] = useState(() => {
-                return sessionStorage.getItem("ishop_auth") === "true";
-            });
+            // Always starts locked on fresh open or page reload
+            const [isAuthenticated, setIsAuthenticated] = useState(false);
             const [mpin, setMpin] = useState("");
             const [authError, setAuthError] = useState(false);
 
@@ -100,8 +103,7 @@
                 
                 if (numericVal.length === 4) {
                     if (numericVal === "2141" || numericVal === "7003") {
-                        sessionStorage.setItem("ishop_auth", "true");
-                        window.location.reload();
+                        setIsAuthenticated(true);
                     } else {
                         setAuthError(true);
                         setMpin("");
@@ -112,7 +114,6 @@
             };
 
             const dashboardRef = useRef(null);
-            const cityInputRef = useRef(null);
             const dropdownRef = useRef(null);
             
             const defaultCheckIn = new Date();
@@ -120,12 +121,11 @@
             const defaultCheckOut = new Date(defaultCheckIn);
             defaultCheckOut.setDate(defaultCheckOut.getDate() + 1);
 
-            const [city, setCity] = useState("Kolkata");
+            const [city, setCity] = useState("kolkata");
             const [citiesList, setCitiesList] = useState([
-                "Kolkata", "Mumbai", "Delhi", "Bengaluru", "Chennai", "Hyderabad", "Pune", 
-                "Ahmedabad", "Jaipur", "Goa", "Dubai", "New York", "Singapore", "Bangkok", "London"
+                "kolkata", "mumbai", "delhi", "bengaluru", "chennai", "hyderabad", "pune", 
+                "ahmedabad", "jaipur", "goa", "dubai", "new york", "singapore", "bangkok", "london"
             ]);
-            const [filteredCities, setFilteredCities] = useState([]);
             const [showDropdown, setShowDropdown] = useState(false);
             const [checkIn, setCheckIn] = useState(formatDate(defaultCheckIn));
             const [checkOut, setCheckOut] = useState(formatDate(defaultCheckOut));
@@ -139,7 +139,7 @@
                     .then(data => {
                         if (data && typeof data === 'object') {
                             const keys = Object.keys(data);
-                            if (keys.length > 0) setCitiesList(keys);
+                            if (keys.length > 0) setCitiesList(keys.map(k => k.toLowerCase()));
                         }
                     })
                     .catch(err => console.log("using default city list fallback"));
@@ -177,17 +177,15 @@
                             
                             <div className="space-y-3 relative">
                                 <input 
-                                    type="text" 
+                                    type="password" 
                                     inputMode="numeric"
                                     maxLength="4" 
                                     value={mpin} 
                                     onChange={handleMpinChange}
                                     autoFocus
-                                    className="w-full text-center text-3xl font-black py-4 glass-input rounded-2xl focus:outline-none text-transparent absolute inset-0 z-10 no-cursor"
+                                    style={{ color: 'rgba(100, 116, 139, 0.7)', letterSpacing: '0.5em' }}
+                                    className="w-full text-center text-3xl font-black py-4 glass-input rounded-2xl focus:outline-none"
                                 />
-                                <div className="w-full text-center text-3xl font-black py-4 rounded-2xl tracking-[0.5em] text-slate-800 bg-white/60 border border-white/90 pointer-events-none select-none">
-                                    {mpin ? "*".repeat(mpin.length) : "••••"}
-                                </div>
                                 {authError && <p className="text-xs font-bold text-red-500 pt-1">invalid mpin. please try again.</p>}
                             </div>
                         </div>
@@ -195,30 +193,9 @@
                 );
             }
 
-            const handleCityChange = (e) => {
-                const val = e.target.value;
-                setCity(val);
-                if (val.trim().length > 0) {
-                    const matches = citiesList.filter(c => c.toLowerCase().includes(val.toLowerCase()));
-                    setFilteredCities(matches);
-                    setShowDropdown(true);
-                } else {
-                    setFilteredCities([]);
-                    setShowDropdown(false);
-                }
-            };
-
             const selectCity = (selectedCity) => {
                 setCity(selectedCity);
                 setShowDropdown(false);
-                if (cityInputRef.current) cityInputRef.current.focus();
-            };
-
-            const handleKeyDown = (e) => {
-                if (e.key === 'Enter') {
-                    setShowDropdown(false);
-                    handleSearch();
-                }
             };
 
             const handleCheckInChange = (e) => {
@@ -398,8 +375,7 @@
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <span className="hidden md:inline text-xs font-bold text-slate-600 bg-orange-50 px-3 py-1.5 rounded-xl border border-orange-200">welcome, lion 🦁</span>
-                            <button onClick={() => { sessionStorage.removeItem("ishop_auth"); window.location.reload(); }} className="text-xs font-bold text-slate-500 hover:text-slate-900 bg-white/80 px-3 py-1.5 rounded-xl border border-slate-200">
+                            <button onClick={() => setIsAuthenticated(false)} className="text-xs font-bold text-slate-500 hover:text-slate-900 bg-white/80 px-4 py-2 rounded-xl border border-slate-200 shadow-sm">
                                 lock session
                             </button>
                         </div>
@@ -408,33 +384,24 @@
                     <div className="max-w-5xl mx-auto mt-6 md:mt-12 px-4 relative z-40">
                         <div className="glass-card p-3 rounded-3xl flex flex-col md:flex-row items-center gap-3 shadow-xl">
                             
-                            <div className="flex-1 flex items-center px-4 md:px-5 py-3.5 glass-input rounded-2xl relative w-full" ref={dropdownRef}>
+                            <!-- Search box acting as dropdown selector with zero cursor -->
+                            <div className="flex-1 flex items-center px-4 md:px-5 py-3.5 glass-input rounded-2xl relative w-full select-none" ref={dropdownRef} onClick={() => setShowDropdown(!showDropdown)}>
                                 <svg className="w-5 h-5 text-slate-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                 <div className="flex flex-col w-full relative">
                                     <input 
-                                        ref={cityInputRef}
                                         type="text" 
+                                        readOnly
                                         value={city} 
-                                        onChange={handleCityChange}
-                                        onFocus={() => {
-                                            if (city.trim().length > 0) {
-                                                const matches = citiesList.filter(c => c.toLowerCase().includes(city.toLowerCase()));
-                                                setFilteredCities(matches);
-                                                setShowDropdown(true);
-                                            }
-                                        }}
-                                        onKeyDown={handleKeyDown}
-                                        className="text-base md:text-lg font-bold text-slate-800 bg-transparent focus:outline-none w-full placeholder-slate-400" 
-                                        placeholder="type city (e.g. dubai, new york...)" 
+                                        className="text-base md:text-lg font-bold text-slate-800 bg-transparent focus:outline-none w-full pointer-events-none" 
                                     />
                                     <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest mt-0.5">destination</span>
 
-                                    {showDropdown && filteredCities.length > 0 && (
+                                    {showDropdown && citiesList.length > 0 && (
                                         <div className="absolute top-full left-0 mt-3 w-full bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-2xl shadow-2xl max-h-64 overflow-y-auto z-50 py-2">
-                                            {filteredCities.map((item, idx) => (
+                                            {citiesList.map((item, idx) => (
                                                 <div 
                                                     key={idx} 
-                                                    onClick={() => selectCity(item)}
+                                                    onClick={(e) => { e.stopPropagation(); selectCity(item); }}
                                                     className="px-5 py-3 text-sm font-bold text-slate-700 hover:bg-orange-50 hover:text-orange-600 cursor-pointer transition-all border-b border-slate-50 last:border-none flex items-center justify-between"
                                                 >
                                                     <span>{item}</span>
