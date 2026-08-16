@@ -80,12 +80,19 @@
         const { useState, useEffect, useMemo, useRef } = React;
         const { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell } = window.Recharts;
 
-        // Monochrome color palette for charts
+        const DEFAULT_CITIES = [
+            "kolkata", "mumbai", "delhi", "bengaluru", "chennai", "hyderabad", "pune", 
+            "ahmedabad", "jaipur", "goa", "dubai", "new york", "singapore", "bangkok", 
+            "london", "gurgaon", "noida", "chandigarh", "kochi", "varanasi", "agra", 
+            "amritsar", "shimla", "manali", "ooty", "mysuru", "patna", "bhopal", 
+            "indore", "lucknow", "surat", "nagpur", "visakhapatnam", "vadodara", "coimbatore"
+        ];
+
         const SUP_COLORS = {
-            cleartrip: "#0f172a", // slate-900
-            makemytrip: "#475569", // slate-600
-            yatra: "#94a3b8", // slate-400
-            tripsure: "#cbd5e1" // slate-300
+            cleartrip: "#0f172a",
+            makemytrip: "#475569",
+            yatra: "#94a3b8",
+            tripsure: "#cbd5e1"
         };
 
         const formatDate = (date) => {
@@ -233,6 +240,15 @@
                 nextDay.setDate(nextDay.getDate() + 1);
                 setCheckOut(formatDate(nextDay));
             };
+
+            const filteredSuggestions = useMemo(() => {
+                const query = citySearch.trim().toLowerCase();
+                return citiesList.filter(c => {
+                    const matches = query === "" || c.includes(query);
+                    const notInBulk = mode === 'single' || !bulkCities.includes(c);
+                    return matches && notInBulk;
+                });
+            }, [citiesList, citySearch, mode, bulkCities]);
 
             const handleSearch = async () => {
                 let citiesToProcess = [];
@@ -483,20 +499,21 @@
                                     
                                     <span className="text-[10px] text-slate-500 font-extrabold lowercase tracking-widest mt-0.5">destination{mode==='bulk'?'s':''}</span>
 
-                                    {showDropdown && citiesList.length > 0 && (
+                                    {showDropdown && (
                                         <div className="absolute top-full left-0 mt-3 w-full bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-2xl shadow-2xl max-h-64 overflow-y-auto z-50 py-2">
-                                            {citiesList.filter(c => c.includes(citySearch) && (mode === 'single' || !bulkCities.includes(c))).map((item, idx) => (
-                                                <div 
-                                                    key={idx} 
-                                                    onClick={(e) => { e.stopPropagation(); selectCity(item); }}
-                                                    className="px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer transition-all border-b border-slate-50 last:border-none flex items-center justify-between"
-                                                >
-                                                    <span>{item}</span>
-                                                    <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">select</span>
-                                                </div>
-                                            ))}
-                                            {mode === 'bulk' && citiesList.filter(c => !bulkCities.includes(c)).length === 0 && (
-                                                <div className="px-5 py-3 text-sm font-bold text-slate-400 text-center">all available cities selected</div>
+                                            {filteredSuggestions.length > 0 ? (
+                                                filteredSuggestions.map((item, idx) => (
+                                                    <div 
+                                                        key={idx} 
+                                                        onClick={(e) => { e.stopPropagation(); selectCity(item); }}
+                                                        className="px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer transition-all border-b border-slate-50 last:border-none flex items-center justify-between"
+                                                    >
+                                                        <span>{item}</span>
+                                                        <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">select</span>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="px-5 py-3 text-sm font-bold text-slate-400 text-center">no matching destinations</div>
                                             )}
                                         </div>
                                     )}
@@ -708,15 +725,17 @@
 
         const DashboardContainer = ({ onLock }) => {
             const [searchMode, setSearchMode] = useState('single');
-            const [citiesList, setCitiesList] = useState([]);
+            const [citiesList, setCitiesList] = useState(DEFAULT_CITIES);
 
             useEffect(() => {
                 fetch('city_database.json')
                     .then(res => res.json())
                     .then(data => {
-                        if (data && typeof data === 'object') {
+                        if (Array.isArray(data)) {
+                            setCitiesList(data.map(k => String(k).toLowerCase()));
+                        } else if (data && typeof data === 'object') {
                             const keys = Object.keys(data);
-                            if (keys.length > 0) setCitiesList(keys.map(k => k.toLowerCase()));
+                            if (keys.length > 0) setCitiesList(keys.map(k => String(k).toLowerCase()));
                         }
                     })
                     .catch(err => console.log("using default city list fallback"));
