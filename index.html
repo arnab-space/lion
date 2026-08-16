@@ -22,10 +22,6 @@
     <!-- SheetJS for Excel Export -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     
-    <!-- html2canvas and jsPDF for PDF Report Generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    
     <!-- Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
@@ -76,6 +72,21 @@
         const { useState, useEffect, useMemo, useRef } = React;
         const { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } = window.Recharts;
 
+        // Common Indian Cities database list for autocomplete
+        const CITIES_DATABASE = [
+            "Mumbai", "Delhi", "Kolkata", "Bengaluru", "Chennai", "Hyderabad", "Pune", "Ahmedabad", 
+            "Jaipur", "Goa", "Surat", "Lucknow", "Kanpur", "Nagpur", "Indore", "Thane", "Bhopal", 
+            "Visakhapatnam", "Patna", "Vadodara", "Ghaziabad", "Ludhiana", "Agra", "Nashik", "Faridabad", 
+            "Meerut", "Rajkot", "Varanasi", "Srinagar", "Aurangabad", "Dhanbad", "Amritsar", "Navi Mumbai", 
+            "Allahabad", "Ranchi", "Howrah", "Coimbatore", "Jabalpur", "Gwalior", "Vijayawada", "Jodhpur", 
+            "Madurai", "Raipur", "Kota", "Guwahati", "Chandigarh", "Solapur", "Hubli-Dharwad", "Mysore", 
+            "Tiruchirappalli", "Bareilly", "Aligarh", "Moradabad", "Jalandhar", "Bhubaneswar", "Salem", 
+            "Warangal", "Guntur", "Bhiwandi", "Saharanpur", "Gorakhpur", "Bikaner", "Amravati", "Noida", 
+            "Jamshedpur", "Bhilai", "Cuttack", "Kochi", "Nellore", "Bhavnagar", "Dehradun", "Durgapur", 
+            "Asansol", "Rourkela", "Nanded", "Kolhapur", "Ajmer", "Akola", "Gulbarga", "Jamnagar", "Ujjain", 
+            "Siliguri", "Jhansi", "Jammu", "Mangalore", "Erode", "Belgaum", "Tirunelveli", "Udaipur"
+        ];
+
         const formatDate = (date) => {
             const d = new Date(date);
             let month = '' + (d.getMonth() + 1);
@@ -95,12 +106,44 @@
             defaultCheckOut.setDate(defaultCheckOut.getDate() + 1);
 
             const [city, setCity] = useState("Kolkata");
+            const [filteredCities, setFilteredCities] = useState([]);
+            const [showDropdown, setShowDropdown] = useState(false);
             const [checkIn, setCheckIn] = useState(formatDate(defaultCheckIn));
             const [checkOut, setCheckOut] = useState(formatDate(defaultCheckOut));
             const [loading, setLoading] = useState(false);
-            const [isExporting, setIsExporting] = useState(false);
             const [hotels, setHotels] = useState([]);
             const [error, setError] = useState(null);
+
+            const dropdownRef = useRef(null);
+
+            // Close city dropdown when clicking outside
+            useEffect(() => {
+                const handleClickOutside = (event) => {
+                    if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                        setShowDropdown(false);
+                    }
+                };
+                document.addEventListener("mousedown", handleClickOutside);
+                return () => document.removeEventListener("mousedown", handleClickOutside);
+            }, []);
+
+            const handleCityChange = (e) => {
+                const val = e.target.value;
+                setCity(val);
+                if (val.trim().length > 0) {
+                    const matches = CITIES_DATABASE.filter(c => c.toLowerCase().includes(val.toLowerCase()));
+                    setFilteredCities(matches);
+                    setShowDropdown(true);
+                } else {
+                    setFilteredCities([]);
+                    setShowDropdown(false);
+                }
+            };
+
+            const selectCity = (selectedCity) => {
+                setCity(selectedCity);
+                setShowDropdown(false);
+            };
 
             const handleCheckInChange = (e) => {
                 const newCheckInDate = e.target.value;
@@ -113,6 +156,7 @@
             const handleSearch = async () => {
                 setLoading(true);
                 setError(null);
+                setShowDropdown(false);
                 setHotels([]); 
                 try {
                     const TUNNEL_URL = "https://jpeg-farms-throwing-recommend.trycloudflare.com";
@@ -169,16 +213,13 @@
                         }
                     });
 
-                    // Accurate Cleartrip specific CT_HID extraction from priceSummary
+                    // Strict check: Only assign CT_HID if Cleartrip price is present
                     let ct_hid = "N/A";
-                    if (hotel.priceSummary && Array.isArray(hotel.priceSummary)) {
-                        const ctPartner = hotel.priceSummary.find(sup => sup.partnerName?.toLowerCase().includes("cleartrip"));
+                    if (prices.cleartrip !== null && prices.cleartrip !== undefined) {
+                        const ctPartner = (hotel.priceSummary || []).find(sup => sup.partnerName?.toLowerCase().includes("cleartrip"));
                         if (ctPartner && ctPartner.hotelId) {
                             ct_hid = ctPartner.hotelId;
                         }
-                    }
-                    if (ct_hid === "N/A") {
-                        ct_hid = hotel.hotelKey || hotel.hotelId || hotel.hotelInfo?.hotelId || "N/A";
                     }
 
                     processedList.push({
@@ -248,42 +289,6 @@
                 XLSX.writeFile(wb, `Telemetry_${city}_${checkIn}.xlsx`);
             };
 
-            const exportToPDF = async () => {
-                if (!dashboardRef.current) return;
-                setIsExporting(true);
-                try {
-                    const canvas = await html2canvas(dashboardRef.current, { 
-                        scale: 1.5, 
-                        useCORS: true, 
-                        allowTaint: true, 
-                        backgroundColor: "#f8fafc" 
-                    });
-                    const imgData = canvas.toDataURL("image/png");
-                    const pdf = new window.jspdf.jsPDF("p", "mm", "a4");
-                    const pdfWidth = pdf.internal.pageSize.getWidth();
-                    const pdfHeight = pdf.internal.pageSize.getHeight();
-                    const imgProps = pdf.getImageProperties(imgData);
-                    const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
-                    
-                    let heightLeft = imgHeight;
-                    let position = 0;
-                    pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
-                    heightLeft -= pdfHeight;
-                    while (heightLeft >= 0) {
-                        position = heightLeft - imgHeight;
-                        pdf.addPage();
-                        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
-                        heightLeft -= pdfHeight;
-                    }
-                    pdf.save(`Scrape_Report_${city}.pdf`);
-                } catch (error) {
-                    console.error("PDF generation error:", error);
-                    alert("PDF Generation Failed. Check console logs for details.");
-                } finally {
-                    setIsExporting(false);
-                }
-            };
-
             const SkeletonLoader = () => (
                 <div className="max-w-6xl mx-auto mt-8 px-4 w-full animate-pulse">
                     <div className="flex justify-center mb-8">
@@ -323,13 +328,48 @@
                     </nav>
 
                     <div className="max-w-5xl mx-auto mt-10 px-4 relative z-40">
-                        <div className="glass-card p-2 rounded-2xl flex items-center gap-2">
-                            <div className="flex-1 flex items-center px-5 py-3 glass-input rounded-xl mr-1">
+                        <div className="glass-card p-2 rounded-2xl flex items-center gap-2 relative">
+                            
+                            {/* City Input with Autocomplete Dropdown */}
+                            <div className="flex-1 flex items-center px-5 py-3 glass-input rounded-xl mr-1 relative" ref={dropdownRef}>
                                 <svg className="w-5 h-5 text-slate-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                                <div className="flex flex-col w-full">
-                                    <input type="text" value={city} onChange={(e) => setCity(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                                        className="text-lg font-bold text-slate-800 bg-transparent focus:outline-none w-full placeholder-slate-400" placeholder="Destination" />
+                                <div className="flex flex-col w-full relative">
+                                    <input 
+                                        type="text" 
+                                        value={city} 
+                                        onChange={handleCityChange}
+                                        onFocus={() => {
+                                            if (city.trim().length > 0) {
+                                                const matches = CITIES_DATABASE.filter(c => c.toLowerCase().includes(city.toLowerCase()));
+                                                setFilteredCities(matches);
+                                                setShowDropdown(true);
+                                            }
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                setShowDropdown(false);
+                                                handleSearch();
+                                            }
+                                        }}
+                                        className="text-lg font-bold text-slate-800 bg-transparent focus:outline-none w-full placeholder-slate-400" 
+                                        placeholder="Type city (e.g. Kol...)" 
+                                    />
                                     <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mt-0.5">Location</span>
+
+                                    {/* Autocomplete Suggestions Menu */}
+                                    {showDropdown && filteredCities.length > 0 && (
+                                        <div className="absolute top-full left-0 mt-2 w-full bg-white/95 backdrop-blur-md border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto z-50 py-1">
+                                            {filteredCities.map((item, idx) => (
+                                                <div 
+                                                    key={idx} 
+                                                    onClick={() => selectCity(item)}
+                                                    className="px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-orange-50 hover:text-orange-600 cursor-pointer transition-colors border-b border-slate-50 last:border-none"
+                                                >
+                                                    {item}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -382,10 +422,7 @@
                                 </div>
                                 <div className="flex gap-3" data-html2canvas-ignore="true">
                                     <button onClick={exportToExcel} className="glass-card flex items-center text-sm font-bold text-slate-700 px-5 py-2.5 rounded-xl hover:bg-white transition-all shadow-sm">
-                                        Export Data
-                                    </button>
-                                    <button onClick={exportToPDF} disabled={isExporting} className="bg-white border border-slate-200 shadow-sm flex items-center text-sm font-bold text-orange-600 px-5 py-2.5 rounded-xl hover:bg-orange-50 transition-all disabled:opacity-50">
-                                        {isExporting ? 'Generating...' : 'Download Report'}
+                                        Export Data (Excel)
                                     </button>
                                 </div>
                             </div>
