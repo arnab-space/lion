@@ -952,7 +952,7 @@
                 <div className="relative min-h-screen">
                     <DashboardContainer onLock={() => { setIsLocked(true); setHasShattered(false); }} />
                     
-                    <div className={`fixed inset-0 z-[999999] bg-slate-100/60 backdrop-blur-2xl transition-opacity duration-700 flex items-center justify-center ${isLocked && !hasShattered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+                    <div className={`fixed inset-0 z-[999999] bg-slate-100/60 backdrop-blur-lg transition-opacity duration-700 flex items-center justify-center ${isLocked && !hasShattered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                         {isLocked && <LockScreen onUnlock={handleUnlock} />}
                     </div>
                 </div>
