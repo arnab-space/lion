@@ -90,7 +90,6 @@
             return [year, month, day].join('-');
         };
 
-        /* --- SKELETON LOADER COMPONENT --- */
         const SkeletonLoader = () => (
             <div className="max-w-6xl mx-auto mt-12 px-4 w-full animate-pulse">
                 <div className="flex justify-center mb-8">
@@ -107,7 +106,6 @@
             </div>
         );
 
-        /* --- LOCK SCREEN COMPONENT --- */
         const LockScreen = ({ onUnlock }) => {
             const [mpin, setMpin] = useState("");
             const [authError, setAuthError] = useState(false);
@@ -142,21 +140,25 @@
                         </div>
 
                         <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-1">class monitor</h2>
-                        <p className="text-xs font-bold text-orange-600 uppercase tracking-widest mb-1">this <em>cm</em> can improve our <em>cm</em></p>
+                        <p className="text-xs font-bold text-orange-600 lowercase tracking-widest mb-1">this <em>cm</em> can improve our <em>cm</em></p>
                         <p className="text-xs font-semibold text-slate-500 mb-6">enter your 4-digit mpin</p>
                         
                         <div className="space-y-3 relative">
-                            <input 
-                                type="text" 
-                                inputMode="numeric"
-                                maxLength="4" 
-                                value={mpin} 
-                                onChange={handleMpinChange}
-                                autoFocus
-                                className="w-full text-center text-3xl font-black py-4 glass-input rounded-2xl focus:outline-none text-transparent absolute inset-0 z-10"
-                            />
-                            <div className="w-full text-center text-3xl font-black py-4 rounded-2xl tracking-[0.5em] pointer-events-none select-none bg-white/60 border border-white/90" style={{ color: 'rgba(100, 116, 139, 0.7)' }}>
-                                {mpin ? "*".repeat(mpin.length) : "****"}
+                            <div className="relative w-full glass-input rounded-2xl overflow-hidden">
+                                <input 
+                                    type="text" 
+                                    inputMode="numeric"
+                                    maxLength="4" 
+                                    value={mpin} 
+                                    onChange={handleMpinChange}
+                                    autoFocus
+                                    className="w-full text-center text-3xl font-black py-4 focus:outline-none text-transparent bg-transparent relative z-10"
+                                />
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                                    <span className="text-3xl font-black tracking-[0.5em] text-black">
+                                        {mpin ? "*".repeat(mpin.length) : <span className="text-slate-300">****</span>}
+                                    </span>
+                                </div>
                             </div>
                             {authError && <p className="text-xs font-bold text-red-500 pt-1">invalid mpin. please try again.</p>}
                         </div>
@@ -165,7 +167,6 @@
             );
         };
 
-        /* --- DASHBOARD COMPONENT --- */
         const Dashboard = ({ onLock }) => {
             const dropdownRef = useRef(null);
             
@@ -365,12 +366,18 @@
                 <div className="pb-20 relative">
                     <nav className="glass-header sticky top-0 z-50 px-4 md:px-8 py-4 flex items-center justify-between shadow-sm">
                         <div className="flex items-center gap-3 md:gap-4">
-                            <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-2.5 rounded-2xl shadow-lg shadow-orange-500/30">
-                                <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                            
+                            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30 w-10 h-10 p-1.5 flex-shrink-0">
+                                <svg viewBox="0 0 200 100" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                                    <rect width="200" height="100" rx="16" fill="transparent"/>
+                                    <text x="25" y="78" fontFamily="Inter, sans-serif" fontWeight="900" fontSize="75" fill="white">c</text>
+                                    <text x="105" y="78" fontFamily="Inter, sans-serif" fontWeight="900" fontSize="75" fill="#334155">m</text>
+                                </svg>
                             </div>
+                            
                             <div className="flex flex-col">
                                 <span className="text-slate-900 font-extrabold text-lg md:text-xl tracking-tight leading-none">class monitor</span>
-                                <span className="text-slate-500 text-[10px] md:text-[11px] font-bold tracking-widest uppercase mt-1">this <em>cm</em> can improve our <em>cm</em></span>
+                                <span className="text-slate-500 text-[10px] md:text-[11px] font-bold tracking-widest lowercase mt-1">this <em>cm</em> can improve our <em>cm</em></span>
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
@@ -477,8 +484,8 @@
                                     <div className="flex-grow w-full">
                                         <ResponsiveContainer width="100%" height="100%">
                                             <BarChart data={starData} layout="vertical" margin={{ top: 0, right: 20, left: -20, bottom: 0 }}>
-                                                <XAxis type="number" hide />
-                                                <YAxis dataKey="name" type="category" domain={[25, 60]} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11, fontWeight: 700}} />
+                                                <XAxis type="number" domain={[25, 60]} hide />
+                                                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11, fontWeight: 700}} />
                                                 <Tooltip cursor={{fill: 'rgba(255,255,255,0.4)'}} contentStyle={{borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -3px rgb(0 0 0 / 0.1)'}} />
                                                 <Legend iconType="circle" wrapperStyle={{fontSize: '10px', fontWeight: 700, paddingTop: '10px'}} />
                                                 <Bar dataKey="ct win" stackId="a" fill="#ea580c" barSize={12} />
@@ -567,12 +574,11 @@
                                 ))}
                             </div>
                         </div>
-                    )}
+                    </div>
                 </div>
             );
         };
 
-        /* --- MAIN APP CONTROLLER --- */
         const App = () => {
             const [isAuthenticated, setIsAuthenticated] = useState(false);
 
