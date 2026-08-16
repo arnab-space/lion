@@ -41,6 +41,7 @@
             color: #1e293b;
             text-transform: lowercase;
             cursor: default;
+            user-select: none;
         }
         input, button, select {
             cursor: pointer;
@@ -90,7 +91,7 @@
             return [year, month, day].join('-');
         };
 
-        const FunLoader = ({ city }) => (
+        const FunLoader = ({ progress }) => (
             <div className="w-full flex flex-col items-center justify-center py-24 animate-in fade-in duration-500">
                 <div className="relative w-20 h-20 mb-8">
                     <div className="absolute inset-0 bg-orange-200 rounded-full animate-ping opacity-75"></div>
@@ -99,8 +100,14 @@
                         <span className="animate-bounce">🕵️‍♂️</span>
                     </div>
                 </div>
-                <h3 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight mb-2">snooping around {city}...</h3>
-                <p className="text-sm font-bold text-slate-500 max-w-sm text-center leading-relaxed">bribing receptionists, comparing suppliers, and hunting down the best secret rates. this takes about 20 seconds.</p>
+                {progress ? (
+                    <h3 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight mb-2">
+                        snooping around {progress.city} ({progress.current}/{progress.total})...
+                    </h3>
+                ) : (
+                    <h3 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight mb-2">snooping around...</h3>
+                )}
+                <p className="text-sm font-bold text-slate-500 max-w-sm text-center leading-relaxed">bribing receptionists, comparing suppliers, and hunting down the best secret rates.</p>
             </div>
         );
 
@@ -136,8 +143,7 @@
                 <div className="min-h-screen flex items-center justify-center p-4">
                     <div className="glass-card p-8 md:p-12 rounded-3xl shadow-2xl max-w-md w-full text-center animate-in fade-in zoom-in duration-300">
                         <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-1">class monitor</h2>
-                        <p className="text-xs font-bold text-orange-600 lowercase tracking-widest mb-2">this <em>cm</em> can improve our <em>cm</em></p>
-                        <p className="text-xs font-semibold text-slate-500 mb-8">enter your 4-digit mpin</p>
+                        <p className="text-xs font-bold text-orange-600 tracking-widest mb-8">this <em>cm</em> can improve our <em>cm</em></p>
                         
                         <div className="space-y-3 relative">
                             <div className="relative w-full glass-input rounded-2xl overflow-hidden">
@@ -172,7 +178,10 @@
             defaultCheckOut.setDate(defaultCheckOut.getDate() + 1);
 
             const [hasSearched, setHasSearched] = useState(false);
+            const [searchMode, setSearchMode] = useState('single'); 
             const [city, setCity] = useState("kolkata");
+            const [bulkCities, setBulkCities] = useState([]);
+            
             const [citiesList, setCitiesList] = useState([
                 "kolkata", "mumbai", "delhi", "bengaluru", "chennai", "hyderabad", "pune", 
                 "ahmedabad", "jaipur", "goa", "dubai", "new york", "singapore", "bangkok", "london"
@@ -180,9 +189,12 @@
             const [showDropdown, setShowDropdown] = useState(false);
             const [checkIn, setCheckIn] = useState(formatDate(defaultCheckIn));
             const [checkOut, setCheckOut] = useState(formatDate(defaultCheckOut));
+            
             const [loading, setLoading] = useState(false);
+            const [scrapeProgress, setScrapeProgress] = useState(null);
             const [hotels, setHotels] = useState([]);
             const [error, setError] = useState(null);
+            const [listFilter, setListFilter] = useState('all');
 
             useEffect(() => {
                 fetch('city_database.json')
@@ -207,8 +219,19 @@
             }, []);
 
             const selectCity = (selectedCity) => {
-                setCity(selectedCity);
-                setShowDropdown(false);
+                if (searchMode === 'single') {
+                    setCity(selectedCity);
+                    setShowDropdown(false);
+                } else {
+                    if (bulkCities.length < 10 && !bulkCities.includes(selectedCity)) {
+                        setBulkCities([...bulkCities, selectedCity]);
+                    }
+                    setShowDropdown(false);
+                }
+            };
+
+            const removeCity = (cityToRemove) => {
+                setBulkCities(bulkCities.filter(c => c !== cityToRemove));
             };
 
             const handleCheckInChange = (e) => {
@@ -220,41 +243,69 @@
             };
 
             const handleSearch = async () => {
+                const citiesToProcess = searchMode === 'single' ? [city] : bulkCities;
+                
+                if (citiesToProcess.length === 0) {
+                    setError("please select at least one destination.");
+                    return;
+                }
+
                 setHasSearched(true);
                 setLoading(true);
                 setError(null);
                 setShowDropdown(false);
                 setHotels([]); 
-                try {
-                    const TUNNEL_URL = "https://jpeg-farms-throwing-recommend.trycloudflare.com";
-                    const API_URL = `${TUNNEL_URL}/scrape?city=${city}&checkin=${checkIn}&checkout=${checkOut}`;
-                    
-                    const response = await fetch(API_URL);
-                    const data = await response.json();
-                    
-                    if (data.status === "success" && data.hotels && data.hotels.length > 0) {
-                        setHotels(data.hotels);
-                    } else {
-                        setHotels([]);
-                        setError(data.error || "website returned 0 properties. check proxy or session state.");
+                setListFilter('all');
+                
+                let allResults = [];
+                const TUNNEL_URL = "https://jpeg-farms-throwing-recommend.trycloudflare.com";
+
+                for (let i = 0; i < citiesToProcess.length; i++) {
+                    const currentCity = citiesToProcess[i];
+                    if (searchMode === 'bulk') {
+                        setScrapeProgress({ current: i + 1, total: citiesToProcess.length, city: currentCity });
                     }
-                } catch (err) {
-                    setError("scraping engine unreachable. verify the cloudflare tunnel and local uvicorn server.");
-                    setHotels([]);
-                } finally {
-                    setLoading(false);
+                    
+                    try {
+                        const response = await fetch(`${TUNNEL_URL}/scrape?city=${currentCity}&checkin=${checkIn}&checkout=${checkOut}`);
+                        const data = await response.json();
+                        
+                        if (data.status === "success" && data.hotels && data.hotels.length > 0) {
+                            const tagged = data.hotels.map(h => ({ ...h, queryCity: currentCity }));
+                            allResults = [...allResults, ...tagged];
+                        }
+                    } catch (err) {
+                        console.error(`failed scraping ${currentCity}`);
+                    }
                 }
+
+                if (allResults.length > 0) {
+                    setHotels(allResults);
+                } else {
+                    setError("website returned 0 properties. check proxy or session state.");
+                }
+                
+                setLoading(false);
+                setScrapeProgress(null);
             };
 
-            const { ctWinRate, supplierShare, starData, parsedHotels } = useMemo(() => {
-                if (!hotels || hotels.length === 0) return { ctWinRate: 0, supplierShare: [], starData: [], parsedHotels: [] };
+            const { ctWinRate, supplierShare, starData, parsedHotels, cityStats } = useMemo(() => {
+                if (!hotels || hotels.length === 0) return { ctWinRate: 0, supplierShare: [], starData: [], parsedHotels: [], cityStats: [] };
 
                 let ctWins = 0, totalValid = 0;
-                let suppliers = { Cleartrip: 0, MakeMyTrip: 0, Yatra: 0, TripSure: 0 };
+                let suppliers = { cleartrip: 0, makemytrip: 0, yatra: 0, tripsure: 0 };
                 let stars = { "5 star": { ct: 0, comp: 0 }, "4 star": { ct: 0, comp: 0 }, "3 star": { ct: 0, comp: 0 }, "2 star": { ct: 0, comp: 0 }, "1 star": { ct: 0, comp: 0 }, "0 star": { ct: 0, comp: 0 } };
+                
+                let cStats = {};
                 let processedList = [];
 
                 hotels.forEach(hotel => {
+                    const qCity = hotel.queryCity || "unknown";
+                    if (!cStats[qCity]) {
+                        cStats[qCity] = { totalProps: 0, totalValid: 0, ctWins: 0, sups: { cleartrip: 0, makemytrip: 0, yatra: 0, tripsure: 0 } };
+                    }
+                    cStats[qCity].totalProps++;
+
                     let prices = { cleartrip: null, makemytrip: null, yatra: null, tripsure: null };
 
                     (hotel.priceSummary || []).forEach(sup => {
@@ -265,10 +316,10 @@
                         else if (name.includes("tripsure")) prices.tripsure = sup.price;
                     });
 
-                    if (prices.cleartrip) suppliers.Cleartrip++;
-                    if (prices.makemytrip) suppliers.MakeMyTrip++;
-                    if (prices.yatra) suppliers.Yatra++;
-                    if (prices.tripsure) suppliers.TripSure++;
+                    if (prices.cleartrip) { suppliers.cleartrip++; cStats[qCity].sups.cleartrip++; }
+                    if (prices.makemytrip) { suppliers.makemytrip++; cStats[qCity].sups.makemytrip++; }
+                    if (prices.yatra) { suppliers.yatra++; cStats[qCity].sups.yatra++; }
+                    if (prices.tripsure) { suppliers.tripsure++; cStats[qCity].sups.tripsure++; }
 
                     let bestSupplier = "n/a";
                     let bestPrice = Infinity;
@@ -288,12 +339,10 @@
                         }
                     }
 
-                    const rawImg = hotel.hotelInfo?.image || 
-                                   hotel.hotelInfo?.thumbnailUrl || 
-                                   (Array.isArray(hotel.hotelInfo?.imagesList) ? hotel.hotelInfo.imagesList[0] : null) || 
-                                   null;
+                    const rawImg = hotel.hotelInfo?.image || hotel.hotelInfo?.thumbnailUrl || (Array.isArray(hotel.hotelInfo?.imagesList) ? hotel.hotelInfo.imagesList[0] : null) || null;
 
                     processedList.push({
+                        queryCity: qCity,
                         ct_hid,
                         name: hotel.hotelInfo?.name || "unknown hotel",
                         rating: hotel.hotelInfo?.starRating || "n/a",
@@ -308,8 +357,13 @@
                         const compPrices = [prices.makemytrip, prices.yatra, prices.tripsure].filter(p => p !== null);
                         if (compPrices.length > 0) {
                             totalValid++;
+                            cStats[qCity].totalValid++;
+                            
                             const minComp = Math.min(...compPrices);
-                            if (prices.cleartrip <= minComp) ctWins++;
+                            if (prices.cleartrip <= minComp) {
+                                ctWins++;
+                                cStats[qCity].ctWins++;
+                            }
 
                             const ratingInt = Math.floor(hotel.hotelInfo?.starRating || 3);
                             const starKey = `${ratingInt} star`;
@@ -324,11 +378,11 @@
                 const winRate = totalValid > 0 ? ((ctWins / totalValid) * 100).toFixed(1) : 0;
                 
                 const barSupplierData = [
-                    { name: "cleartrip", value: suppliers.Cleartrip, color: "#ea580c" },
-                    { name: "makemytrip", value: suppliers.MakeMyTrip, color: "#2563eb" },
-                    { name: "yatra", value: suppliers.Yatra, color: "#dc2626" },
-                    { name: "tripsure", value: suppliers.TripSure, color: "#16a34a" }
-                ].filter(d => d.value > 0).sort((a, b) => b.value - a.value); // Sorting for better readability
+                    { name: "cleartrip", value: suppliers.cleartrip, color: "#ea580c" },
+                    { name: "makemytrip", value: suppliers.makemytrip, color: "#2563eb" },
+                    { name: "yatra", value: suppliers.yatra, color: "#dc2626" },
+                    { name: "tripsure", value: suppliers.tripsure, color: "#16a34a" }
+                ].filter(d => d.value > 0).sort((a, b) => b.value - a.value);
 
                 const barData = Object.keys(stars)
                     .filter(key => stars[key].ct > 0 || stars[key].comp > 0)
@@ -338,12 +392,26 @@
                         "comp win": stars[key].comp
                     })).reverse();
 
-                return { ctWinRate: winRate, supplierShare: barSupplierData, starData: barData, parsedHotels: processedList };
+                const finalCityStats = Object.keys(cStats).map(k => {
+                    const stat = cStats[k];
+                    const wRate = stat.totalValid > 0 ? ((stat.ctWins / stat.totalValid) * 100).toFixed(1) : 0;
+                    
+                    let topSup = "none";
+                    let maxSupVal = 0;
+                    Object.entries(stat.sups).forEach(([s, v]) => {
+                        if(v > maxSupVal) { maxSupVal = v; topSup = s; }
+                    });
+
+                    return { city: k, winRate: wRate, properties: stat.totalProps, topCompetitor: topSup };
+                });
+
+                return { ctWinRate: winRate, supplierShare: barSupplierData, starData: barData, parsedHotels: processedList, cityStats: finalCityStats };
             }, [hotels]);
 
             const exportToExcel = () => {
                 if (parsedHotels.length === 0) return;
                 const flatData = parsedHotels.map(h => ({
+                    "query_city": h.queryCity,
                     "ct_hid": h.ct_hid,
                     "hotel name": h.name,
                     "location": h.location,
@@ -352,54 +420,73 @@
                     "makemytrip price": h.rawPrices.makemytrip || "n/a",
                     "yatra price": h.rawPrices.yatra || "n/a",
                     "tripsure price": h.rawPrices.tripsure || "n/a",
-                    "overall best": h.bestSupplier.toUpperCase()
+                    "overall best": h.bestSupplier
                 }));
                 const ws = XLSX.utils.json_to_sheet(flatData);
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "scrape_data");
-                XLSX.writeFile(wb, `telemetry_${city}_${checkIn}.xlsx`);
+                XLSX.writeFile(wb, `telemetry_${searchMode}_${checkIn}.xlsx`);
             };
+
+            const displayedHotels = listFilter === 'all' ? parsedHotels : parsedHotels.filter(h => h.queryCity === listFilter);
 
             return (
                 <div className="pb-20 relative min-h-screen">
-                    {/* Header: Kept Ultra Minimal with No Logo */}
                     <nav className="glass-header sticky top-0 z-50 px-4 md:px-8 py-4 flex items-center justify-between shadow-sm">
                         <div className="flex flex-col">
                             <span className="text-slate-900 font-extrabold text-lg md:text-xl tracking-tight leading-none">class monitor</span>
-                            <span className="text-slate-500 text-[10px] md:text-[11px] font-bold tracking-widest lowercase mt-1">this <em>cm</em> can improve our <em>cm</em></span>
+                            <span className="text-slate-500 text-[10px] md:text-[11px] font-bold tracking-widest mt-1">this <em>cm</em> can improve our <em>cm</em></span>
                         </div>
                         <button onClick={onLock} className="text-xs font-bold text-slate-500 hover:text-slate-900 bg-white/80 px-4 py-2 rounded-xl border border-slate-200 shadow-sm transition-all">
                             lock session
                         </button>
                     </nav>
 
-                    {/* Centralized Search Box that glides up smoothly when searched */}
                     <div className={`transition-all duration-700 ease-in-out max-w-5xl mx-auto px-4 relative z-40 ${hasSearched ? 'mt-6 md:mt-12' : 'mt-[25vh]'}`}>
                         
                         {!hasSearched && (
                             <div className="text-center mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-                                <h1 className="text-4xl md:text-5xl font-black text-slate-800 tracking-tighter mb-3">where are we looking?</h1>
-                                <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">select destination and check-in dates</p>
+                                <h1 className="text-4xl md:text-5xl font-black text-slate-800 tracking-tighter mb-3">why so serious?</h1>
+                                <p className="text-sm font-bold text-slate-500 tracking-widest">always at your service (24*7)</p>
                             </div>
                         )}
 
+                        <div className="flex justify-center mb-4">
+                            <div className="bg-slate-200/60 p-1 rounded-xl inline-flex shadow-inner">
+                                <button onClick={()=>{setSearchMode('single'); setBulkCities([]);}} className={`px-5 py-2 text-xs font-black rounded-lg transition-all ${searchMode==='single'?'bg-white shadow-md text-slate-800':'text-slate-500 hover:text-slate-700'}`}>single city</button>
+                                <button onClick={()=>{setSearchMode('bulk');}} className={`px-5 py-2 text-xs font-black rounded-lg transition-all ${searchMode==='bulk'?'bg-white shadow-md text-slate-800':'text-slate-500 hover:text-slate-700'}`}>bulk process (beta)</button>
+                            </div>
+                        </div>
+
                         <div className="glass-card p-3 rounded-3xl flex flex-col md:flex-row items-center gap-3 shadow-xl">
                             
-                            {/* Search box acting as dropdown selector with zero cursor */}
                             <div className="flex-1 flex items-center px-4 md:px-5 py-3.5 glass-input rounded-2xl relative w-full select-none" ref={dropdownRef} onClick={() => setShowDropdown(!showDropdown)}>
                                 <svg className="w-5 h-5 text-slate-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                 <div className="flex flex-col w-full relative">
+                                    
+                                    {searchMode === 'bulk' && bulkCities.length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5 mb-1.5">
+                                            {bulkCities.map(c => (
+                                                <span key={c} className="bg-orange-100 text-orange-800 text-[10px] font-black px-2 py-1 rounded-md flex items-center gap-1 shadow-sm">
+                                                    {c} 
+                                                    <span onClick={(e) => { e.stopPropagation(); removeCity(c); }} className="text-orange-500 hover:text-orange-900 cursor-pointer ml-1 text-xs">×</span>
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+
                                     <input 
                                         type="text" 
                                         readOnly
-                                        value={city} 
-                                        className="text-base md:text-lg font-bold text-slate-800 bg-transparent focus:outline-none w-full pointer-events-none" 
+                                        value={searchMode === 'single' ? city : (bulkCities.length < 10 ? (bulkCities.length === 0 ? "select up to 10 cities..." : "") : "max 10 cities selected")}
+                                        className={`text-base md:text-lg font-bold text-slate-800 bg-transparent focus:outline-none w-full pointer-events-none ${searchMode === 'bulk' && bulkCities.length > 0 && bulkCities.length < 10 ? 'hidden' : ''}`}
                                     />
-                                    <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest mt-0.5">destination</span>
+                                    
+                                    <span className="text-[10px] text-slate-500 font-extrabold uppercase tracking-widest mt-0.5">destination{searchMode==='bulk'?'s':''}</span>
 
                                     {showDropdown && citiesList.length > 0 && (
                                         <div className="absolute top-full left-0 mt-3 w-full bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-2xl shadow-2xl max-h-64 overflow-y-auto z-50 py-2">
-                                            {citiesList.map((item, idx) => (
+                                            {citiesList.filter(c => searchMode === 'single' || !bulkCities.includes(c)).map((item, idx) => (
                                                 <div 
                                                     key={idx} 
                                                     onClick={(e) => { e.stopPropagation(); selectCity(item); }}
@@ -409,6 +496,9 @@
                                                     <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">select</span>
                                                 </div>
                                             ))}
+                                            {searchMode === 'bulk' && citiesList.filter(c => !bulkCities.includes(c)).length === 0 && (
+                                                <div className="px-5 py-3 text-sm font-bold text-slate-400 text-center">all available cities selected</div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -436,7 +526,7 @@
                         </div>
                     </div>
 
-                    {loading && <FunLoader city={city} />}
+                    {loading && <FunLoader progress={scrapeProgress} />}
 
                     {error && !loading && (
                         <div className="max-w-md mx-auto mt-16 md:mt-24 text-center glass-card p-8 md:p-10 rounded-3xl animate-in fade-in zoom-in duration-300 shadow-xl">
@@ -450,9 +540,12 @@
 
                     {hasSearched && !loading && hotels.length > 0 && (
                         <div className="max-w-6xl mx-auto mt-8 md:mt-12 px-4 animate-in fade-in slide-in-from-bottom-8 duration-500">
+                            
                             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
                                 <div>
-                                    <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-2">{city}</h1>
+                                    <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-2">
+                                        {searchMode === 'single' ? city : 'overall telemetry'}
+                                    </h1>
                                     <div className="flex items-center gap-3">
                                         <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-100/90 px-3 py-1 rounded-full border border-emerald-200">
                                             <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
@@ -481,7 +574,7 @@
                                         <ResponsiveContainer width="100%" height="100%">
                                             <BarChart data={starData} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
                                                 <XAxis type="number" hide />
-                                                <YAxis dataKey="name" type="category" width={75} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11, fontWeight: 700}} />
+                                                <YAxis dataKey="name" type="category" width={55} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11, fontWeight: 700}} />
                                                 <Tooltip cursor={{fill: 'rgba(255,255,255,0.4)'}} contentStyle={{borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -3px rgb(0 0 0 / 0.1)'}} />
                                                 <Legend iconType="circle" wrapperStyle={{fontSize: '10px', fontWeight: 700, paddingTop: '10px'}} />
                                                 <Bar dataKey="ct win" stackId="a" fill="#ea580c" barSize={12} radius={[4, 0, 0, 4]} />
@@ -491,7 +584,6 @@
                                     </div>
                                 </div>
 
-                                {/* Replaced the Pie Chart with a much easier to read Bar Chart */}
                                 <div className="glass-card rounded-3xl p-6 h-[250px] flex flex-col relative shadow-xl">
                                     <h3 className="text-slate-500 font-bold text-xs tracking-widest uppercase mb-4 text-center">market distribution</h3>
                                     <div className="flex-grow w-full">
@@ -511,8 +603,40 @@
                                 </div>
                             </div>
 
+                            {searchMode === 'bulk' && cityStats.length > 1 && (
+                                <div className="mb-10">
+                                    <h3 className="text-lg font-black text-slate-800 mb-4 px-2">city-wise breakdown</h3>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                        {cityStats.map((stat, idx) => (
+                                            <div key={idx} className="glass-card rounded-2xl p-4 flex flex-col shadow-md hover:-translate-y-1 transition-transform">
+                                                <span className="font-bold text-slate-800 truncate">{stat.city}</span>
+                                                <span className="text-[10px] font-bold text-slate-400 mb-3">{stat.properties} properties</span>
+                                                <div className="mt-auto flex items-end justify-between">
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">win rate</span>
+                                                        <span className="text-xl font-black text-slate-900">{stat.winRate}%</span>
+                                                    </div>
+                                                    {stat.topCompetitor !== 'none' && (
+                                                        <div className="w-4 h-4 rounded-full bg-slate-200" title={`Top Supplier: ${stat.topCompetitor}`} style={{backgroundColor: stat.topCompetitor==='cleartrip'?'#ea580c':stat.topCompetitor==='makemytrip'?'#2563eb':stat.topCompetitor==='yatra'?'#dc2626':'#16a34a'}}></div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {searchMode === 'bulk' && (
+                                <div className="flex flex-wrap gap-2 mb-6 px-2">
+                                    <button onClick={()=>setListFilter('all')} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${listFilter==='all'?'bg-slate-800 text-white shadow-md':'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>all cities</button>
+                                    {bulkCities.map(c => (
+                                        <button key={c} onClick={()=>setListFilter(c)} className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${listFilter===c?'bg-slate-800 text-white shadow-md':'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>{c}</button>
+                                    ))}
+                                </div>
+                            )}
+
                             <div className="space-y-4">
-                                {parsedHotels.map((hotel, idx) => (
+                                {displayedHotels.map((hotel, idx) => (
                                     <div key={idx} className="glass-card rounded-3xl p-4 flex flex-col md:flex-row gap-5 hover:bg-white/90 transition-all duration-300 group shadow-md">
                                         
                                         <div className="w-full md:w-52 h-48 md:h-36 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 overflow-hidden relative shadow-inner flex-shrink-0 flex items-center justify-center">
@@ -536,6 +660,12 @@
                                             {hotel.bestSupplier === 'cleartrip' && (
                                                 <div className="absolute top-3 left-3 bg-orange-500/95 backdrop-blur text-white text-[10px] font-black tracking-wider px-2.5 py-1 rounded-lg shadow-md z-10">
                                                     ct win
+                                                </div>
+                                            )}
+                                            
+                                            {searchMode === 'bulk' && (
+                                                <div className="absolute bottom-3 right-3 bg-slate-900/90 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded-md z-10">
+                                                    {hotel.queryCity}
                                                 </div>
                                             )}
                                         </div>
