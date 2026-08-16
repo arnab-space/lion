@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iShop API Monitor | Enterprise</title>
+    <title>iShop Pricing Assistant | Enterprise</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -151,8 +151,8 @@
                             <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg shadow-orange-500/30">
                                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
                             </div>
-                            <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">Restricted Access</h2>
-                            <p className="text-sm font-semibold text-slate-500 mb-6">Enter your 4-digit MPIN for this session</p>
+                            <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-1">Restricted Access</h2>
+                            <p className="text-sm font-semibold text-slate-500 mb-6">Welcome Lion 🦁 — Enter your 4-digit MPIN</p>
                             
                             <form onSubmit={handleLogin} className="space-y-4">
                                 <input 
@@ -162,7 +162,7 @@
                                     onChange={(e) => setMpin(e.target.value)}
                                     placeholder="••••"
                                     autoFocus
-                                    className="w-full text-center tracking-[1em] text-2xl font-black py-4 glass-input rounded-2xl focus:outline-none placeholder-slate-300"
+                                    className="w-full text-center text-2xl font-black py-3.5 glass-input rounded-2xl focus:outline-none placeholder-slate-300 tracking-widest"
                                 />
                                 {authError && <p className="text-xs font-bold text-red-500">Invalid MPIN. Please try again.</p>}
                                 <button type="submit" className="w-full bg-slate-900 hover:bg-slate-800 text-white font-extrabold py-4 rounded-2xl shadow-xl transition-all">
@@ -353,7 +353,7 @@
                     <div className="flex justify-center mb-8">
                         <div className="flex items-center gap-3 bg-white/70 px-6 py-3 rounded-full border border-white shadow-sm">
                             <div className="w-5 h-5 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
-                            <span className="text-sm font-semibold text-slate-700">Scraping live rates for {city}... Please wait up to 25 seconds for heavy payloads.</span>
+                            <span className="text-sm font-semibold text-slate-700">Analyzing live pricing & market telemetry for {city}... Please wait up to 25 seconds.</span>
                         </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -373,12 +373,15 @@
                             </div>
                             <div className="flex flex-col">
                                 <span className="text-slate-900 font-extrabold text-lg md:text-xl tracking-tight leading-none">iShop Rewards</span>
-                                <span className="text-slate-500 text-[10px] md:text-[11px] font-bold tracking-widest uppercase mt-1">Telemetry Dashboard</span>
+                                <span className="text-slate-500 text-[10px] md:text-[11px] font-bold tracking-widest uppercase mt-1">Real-Time Pricing Assistant</span>
                             </div>
                         </div>
-                        <button onClick={() => { sessionStorage.removeItem("ishop_auth"); window.location.reload(); }} className="text-xs font-bold text-slate-500 hover:text-slate-900 bg-white/80 px-3 py-1.5 rounded-xl border border-slate-200">
-                            Lock Session
-                        </button>
+                        <div className="flex items-center gap-3">
+                            <span className="hidden md:inline text-xs font-bold text-slate-600 bg-orange-50 px-3 py-1.5 rounded-xl border border-orange-200">Welcome, Lion 🦁</span>
+                            <button onClick={() => { sessionStorage.removeItem("ishop_auth"); window.location.reload(); }} className="text-xs font-bold text-slate-500 hover:text-slate-900 bg-white/80 px-3 py-1.5 rounded-xl border border-slate-200">
+                                Lock Session
+                            </button>
+                        </div>
                     </nav>
 
                     <div className="max-w-5xl mx-auto mt-6 md:mt-12 px-4 relative z-40">
@@ -464,7 +467,7 @@
                                     <div className="flex items-center gap-3">
                                         <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 bg-emerald-100/90 px-3 py-1 rounded-full border border-emerald-200">
                                             <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                                            LIVE TELEMETRY
+                                            LIVE PRICING ASSISTANT
                                         </span>
                                         <span className="text-slate-500 text-sm font-semibold">{hotels.length} Properties Analyzed</span>
                                     </div>
