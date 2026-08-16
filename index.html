@@ -122,7 +122,6 @@
             return [year, month, day].join('-');
         };
 
-        // Bulletproof Orange Dot Typography component
         const OrangeDot = () => (
             <span className="relative inline-block leading-none">
                 ı
@@ -159,14 +158,12 @@
             useEffect(() => {
                 if (mpin.length === 4) {
                     if (mpin === "2141" || mpin === "7003") {
-                        // Trigger final shatter animation
                         setIsShattering(true);
                         const timer = setTimeout(() => {
                             onUnlock();
-                        }, 700); // 700ms visually allows the glass burst to play out before unmounting
+                        }, 700); 
                         return () => clearTimeout(timer);
                     } else {
-                        // Trigger error shake
                         setAuthError(true);
                         setIsShaking(true);
                         const timer = setTimeout(() => {
@@ -186,22 +183,16 @@
             };
 
             return (
-                <div className={`bg-white/80 backdrop-blur-2xl p-8 md:p-12 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white/60 max-w-sm w-full text-center transition-all duration-700 pointer-events-auto relative overflow-hidden ${isShattering ? 'scale-125 opacity-0 filter blur-xl brightness-150' : 'scale-100 opacity-100 filter blur-0 brightness-100 animate-in zoom-in duration-300'} ${isShaking ? 'animate-shake' : ''}`}>
+                <div className={`bg-white/90 backdrop-blur-3xl p-8 md:p-12 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white/80 max-w-sm w-full text-center transition-all duration-700 pointer-events-auto relative overflow-hidden ${isShattering ? 'scale-125 opacity-0 filter blur-xl brightness-150' : 'scale-100 opacity-100 filter blur-0 brightness-100 animate-in zoom-in duration-300'} ${isShaking ? 'animate-shake' : ''}`}>
                     
-                    {/* SVG Crack Overlay - Progressively renders as PIN length increases */}
                     <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full pointer-events-none mix-blend-overlay z-0">
-                        <g style={{ opacity: 0.5 }}>
-                            {/* Crack 1 */}
-                            <path d="M50,70 L20,0 L0,10" stroke="#000" strokeWidth="0.2" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 1 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-                            <path d="M50,70 L85,0 L100,10" stroke="#fff" strokeWidth="0.4" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 1 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-                            
-                            {/* Crack 2 */}
-                            <path d="M50,70 L100,50 L100,60" stroke="#000" strokeWidth="0.3" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 2 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-                            <path d="M30,30 L0,50" stroke="#fff" strokeWidth="0.5" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 2 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-
-                            {/* Crack 3 */}
-                            <path d="M50,70 L20,100" stroke="#fff" strokeWidth="0.6" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 3 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.2s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-                            <path d="M70,80 L100,100" stroke="#000" strokeWidth="0.4" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 3 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
+                        <g style={{ opacity: 0.6 }}>
+                            <path d="M50,70 L20,0 L0,10" stroke="#000" strokeWidth="0.3" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 1 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
+                            <path d="M50,70 L85,0 L100,10" stroke="#fff" strokeWidth="0.5" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 1 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
+                            <path d="M50,70 L100,50 L100,60" stroke="#000" strokeWidth="0.4" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 2 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
+                            <path d="M30,30 L0,50" stroke="#fff" strokeWidth="0.6" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 2 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
+                            <path d="M50,70 L20,100" stroke="#fff" strokeWidth="0.7" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 3 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.2s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
+                            <path d="M70,80 L100,100" stroke="#000" strokeWidth="0.5" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 3 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
                         </g>
                     </svg>
 
@@ -219,7 +210,7 @@
                         <p className="text-[10px] font-bold text-slate-500 lowercase tracking-widest mb-8">this <em>cm</em> can improve our <em>cm</em></p>
                         
                         <div className="space-y-2 relative mx-auto w-4/5">
-                            <div className={`relative w-full h-12 border border-slate-200 bg-white/50 rounded-xl overflow-hidden shadow-sm transition-colors focus-within:border-slate-400 focus-within:bg-white`}>
+                            <div className="relative w-full h-12 border border-slate-200 bg-white/50 rounded-xl overflow-hidden shadow-sm transition-colors focus-within:border-slate-400 focus-within:bg-white">
                                 <input 
                                     type="text" 
                                     inputMode="numeric"
@@ -587,7 +578,7 @@
                                     <span className="text-[10px] text-slate-500 font-extrabold lowercase tracking-widest mt-0.5">destination{mode==='bulk'?'s':''}</span>
 
                                     {showDropdown && (
-                                        <div className="absolute top-full left-0 mt-3 w-full bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-2xl shadow-2xl max-h-64 overflow-y-auto z-50 py-2">
+                                        <div className="absolute top-full left-0 mt-3 w-full bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-2xl shadow-2xl max-h-64 overflow-y-auto z-[999] py-2">
                                             {filteredSuggestions.length > 0 ? (
                                                 filteredSuggestions.map((item, idx) => (
                                                     <div 
@@ -675,13 +666,12 @@
                                     <h3 className="text-slate-500 font-bold text-xs tracking-widest lowercase mb-4 text-center">wins by category</h3>
                                     <div className="flex-grow w-full">
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={starData} layout="vertical" margin={{ top: 0, right: 45, left: 0, bottom: 0 }}>
+                                            <BarChart data={starData} layout="vertical" margin={{ top: 0, right: 65, left: 0, bottom: 0 }}>
                                                 <XAxis type="number" hide />
                                                 <YAxis dataKey="name" type="category" width={55} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11, fontWeight: 700}} />
                                                 <Tooltip cursor={{fill: 'rgba(255,255,255,0.4)'}} contentStyle={{borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -3px rgb(0 0 0 / 0.1)'}} />
                                                 <Legend iconType="circle" wrapperStyle={{fontSize: '10px', fontWeight: 700, paddingTop: '10px'}} />
                                                 <Bar dataKey="ct win" stackId="a" fill="#334155" barSize={12} radius={[4, 0, 0, 4]} />
-                                                {/* Notice that the label is attached to the comp win bar, positioned right, so it never overlaps the bars */}
                                                 <Bar dataKey="comp win" stackId="a" fill="#cbd5e1" radius={[0, 4, 4, 0]}>
                                                     <LabelList dataKey="ctPercent" position="right" fill="#64748b" fontSize={10} fontWeight={700} />
                                                 </Bar>
@@ -694,7 +684,7 @@
                                     <h3 className="text-slate-500 font-bold text-xs tracking-widest lowercase mb-4 text-center">market distribution</h3>
                                     <div className="flex-grow w-full">
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={supplierShare} layout="vertical" margin={{ top: 0, right: 45, left: 0, bottom: 0 }}>
+                                            <BarChart data={supplierShare} layout="vertical" margin={{ top: 0, right: 65, left: 0, bottom: 0 }}>
                                                 <XAxis type="number" hide />
                                                 <YAxis dataKey="name" type="category" width={80} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11, fontWeight: 700}} />
                                                 <Tooltip cursor={{fill: 'rgba(255,255,255,0.4)'}} contentStyle={{borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -3px rgb(0 0 0 / 0.1)'}} />
@@ -867,10 +857,9 @@
         };
 
         const App = () => {
-            const [isLocked, setIsLocked] = useState(true);
+            const [isLocked, setIsLocked] = useState(true); // Boots up locked by default
             const [hasShattered, setHasShattered] = useState(false);
 
-            // This ensures the lock screen overlay stays completely hidden after shattering once
             const handleUnlock = () => {
                 setHasShattered(true);
                 setTimeout(() => setIsLocked(false), 700); 
