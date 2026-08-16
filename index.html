@@ -78,7 +78,7 @@
 
     <script type="text/babel">
         const { useState, useEffect, useMemo, useRef } = React;
-        const { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell } = window.Recharts;
+        const { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell, LabelList } = window.Recharts;
 
         const DEFAULT_CITIES = [
             "kolkata", "mumbai", "delhi", "bengaluru", "chennai", "hyderabad", "pune", 
@@ -154,14 +154,14 @@
             };
 
             return (
-                <div className="glass-card p-8 md:p-12 rounded-3xl shadow-2xl max-w-md w-full text-center animate-in zoom-in duration-300 pointer-events-auto">
-                    <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-1">
-                        class mon<span className="relative inline-flex items-center">ı<span className="absolute w-2 h-2 bg-orange-500 rounded-full top-[0.1em] left-1/2 -translate-x-1/2 pointer-events-none"></span></span>tor
+                <div className="bg-white/80 backdrop-blur-2xl p-8 md:p-12 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] border border-white/60 max-w-sm w-full text-center animate-in zoom-in duration-300 pointer-events-auto">
+                    <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-0">
+                        class mon<span className="relative inline-flex items-center">ı<span className="absolute w-1.5 h-1.5 bg-orange-500 rounded-full top-[0.1em] left-1/2 -translate-x-1/2 pointer-events-none"></span></span>tor
                     </h2>
-                    <p className="text-xs font-bold text-slate-500 lowercase tracking-widest mb-8">this <em>cm</em> can improve our <em>cm</em></p>
+                    <p className="text-[10px] font-bold text-slate-500 lowercase tracking-widest mb-8">this <em>cm</em> can improve our <em>cm</em></p>
                     
-                    <div className="space-y-3 relative">
-                        <div className="relative w-full glass-input rounded-2xl overflow-hidden">
+                    <div className="space-y-2 relative mx-auto w-4/5">
+                        <div className="relative w-full border border-slate-200 bg-white/50 rounded-xl overflow-hidden shadow-sm transition-colors focus-within:border-slate-400 focus-within:bg-white">
                             <input 
                                 type="text" 
                                 inputMode="numeric"
@@ -169,15 +169,17 @@
                                 value={mpin} 
                                 onChange={handleMpinChange}
                                 autoFocus
-                                className="w-full text-center text-3xl font-black py-4 focus:outline-none text-transparent bg-transparent relative z-10 caret-transparent"
+                                className="w-full text-center text-3xl font-black py-3 focus:outline-none text-transparent bg-transparent relative z-10 caret-transparent"
                             />
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                                <span className="text-3xl font-black tracking-[0.5em] text-black">
+                                <span className="text-2xl font-black tracking-[0.5em] text-slate-700">
                                     {mpin ? "*".repeat(mpin.length) : <span className="text-slate-300">****</span>}
                                 </span>
                             </div>
                         </div>
-                        {authError && <p className="text-xs font-bold text-slate-700 pt-1">invalid mpin. please try again.</p>}
+                        <div className="h-4">
+                            {authError && <p className="text-[10px] font-bold text-slate-600 animate-in fade-in slide-in-from-bottom-1">invalid mpin. please try again.</p>}
+                        </div>
                     </div>
                 </div>
             );
@@ -403,13 +405,25 @@
                     { name: "tripsure", value: suppliers.tripsure, color: SUP_COLORS.tripsure }
                 ].filter(d => d.value > 0).sort((a, b) => b.value - a.value);
 
+                const totalSupValue = barSupplierData.reduce((acc, curr) => acc + curr.value, 0);
+                barSupplierData.forEach(d => {
+                    d.percent = totalSupValue > 0 ? ((d.value / totalSupValue) * 100).toFixed(1) + '%' : '0%';
+                });
+
                 const barData = Object.keys(stars)
                     .filter(key => stars[key].ct > 0 || stars[key].comp > 0)
-                    .map(key => ({
-                        name: key,
-                        "ct win": stars[key].ct,
-                        "comp win": stars[key].comp
-                    })).reverse();
+                    .map(key => {
+                        const ct = stars[key].ct;
+                        const comp = stars[key].comp;
+                        const total = ct + comp;
+                        const ctPercent = total > 0 ? ((ct / total) * 100).toFixed(0) + '%' : '';
+                        return {
+                            name: key,
+                            "ct win": ct,
+                            "comp win": comp,
+                            ctPercent: ctPercent
+                        };
+                    }).reverse();
 
                 const finalCityStats = Object.keys(cStats).map(k => {
                     const stat = cStats[k];
@@ -452,25 +466,25 @@
             return (
                 <div className={activeMode === mode ? 'block' : 'hidden'}>
                     
-                    {/* Centered Top Content & Toggle */}
+                    {/* Centered Top Content & Tabs (Below Text) */}
                     <div className={`transition-all duration-700 ease-in-out w-full flex flex-col items-center ${hasSearched ? 'mt-6 mb-4' : 'absolute left-0 right-0 top-[18vh] md:top-[22vh] z-30'}`}>
                         
                         {!hasSearched && (
-                            <div className="text-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pointer-events-none">
-                                <h1 className="text-4xl md:text-6xl font-black text-slate-800 tracking-tighter mb-4">
-                                    why so ser<span className="relative inline-flex items-center">ı<span className="absolute w-2.5 h-2.5 bg-orange-500 rounded-full top-[0.15em] left-1/2 -translate-x-1/2 pointer-events-none"></span></span>ous?
+                            <div className="text-center mb-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pointer-events-none">
+                                <h1 className="text-4xl md:text-6xl font-black text-slate-800 tracking-tighter mb-2">
+                                    why so ser<span className="relative inline-flex items-center">ı<span className="absolute w-2.5 h-2.5 bg-orange-500 rounded-full top-[0.1em] left-1/2 -translate-x-1/2 pointer-events-none"></span></span>ous?
                                 </h1>
                                 <p className="text-sm font-bold text-slate-500 lowercase tracking-widest">always at your service (24*7)</p>
                             </div>
                         )}
 
                         <div className="bg-slate-200/60 p-1 rounded-xl inline-flex shadow-inner backdrop-blur-md relative z-50">
-                            <button onClick={() => setMode('single')} className={`px-6 py-2.5 text-xs font-black rounded-lg transition-all ${activeMode==='single'?'bg-white shadow-md text-slate-800':'text-slate-500 hover:text-slate-700'}`}>single city</button>
-                            <button onClick={() => setMode('bulk')} className={`px-6 py-2.5 text-xs font-black rounded-lg transition-all ${activeMode==='bulk'?'bg-white shadow-md text-slate-800':'text-slate-500 hover:text-slate-700'}`}>bulk process (beta)</button>
+                            <button onClick={() => setMode('single')} className={`px-6 py-2 text-xs font-black rounded-lg transition-all ${activeMode==='single'?'bg-white shadow-md text-slate-800':'text-slate-500 hover:text-slate-700'}`}>single city</button>
+                            <button onClick={() => setMode('bulk')} className={`px-6 py-2 text-xs font-black rounded-lg transition-all ${activeMode==='bulk'?'bg-white shadow-md text-slate-800':'text-slate-500 hover:text-slate-700'}`}>bulk process (beta)</button>
                         </div>
                     </div>
 
-                    <div className={`transition-all duration-700 ease-in-out max-w-5xl mx-auto px-4 relative z-40 ${hasSearched ? 'mt-0' : 'mt-[40vh] md:mt-[45vh]'}`}>
+                    <div className={`transition-all duration-700 ease-in-out max-w-5xl mx-auto px-4 relative z-40 ${hasSearched ? 'mt-0' : 'mt-[42vh] md:mt-[45vh]'}`}>
                         <div className="glass-card p-3 rounded-3xl flex flex-col md:flex-row items-center gap-3 shadow-xl">
                             
                             <div className="flex-1 flex items-center px-4 md:px-5 py-3.5 glass-input rounded-2xl relative w-full" ref={dropdownRef}>
@@ -593,7 +607,9 @@
                                                 <YAxis dataKey="name" type="category" width={55} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11, fontWeight: 700}} />
                                                 <Tooltip cursor={{fill: 'rgba(255,255,255,0.4)'}} contentStyle={{borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -3px rgb(0 0 0 / 0.1)'}} />
                                                 <Legend iconType="circle" wrapperStyle={{fontSize: '10px', fontWeight: 700, paddingTop: '10px'}} />
-                                                <Bar dataKey="ct win" stackId="a" fill="#334155" barSize={12} radius={[4, 0, 0, 4]} />
+                                                <Bar dataKey="ct win" stackId="a" fill="#334155" barSize={12} radius={[4, 0, 0, 4]}>
+                                                    <LabelList dataKey="ctPercent" position="insideRight" fill="#ffffff" fontSize={9} fontWeight={700} />
+                                                </Bar>
                                                 <Bar dataKey="comp win" stackId="a" fill="#cbd5e1" radius={[0, 4, 4, 0]} />
                                             </BarChart>
                                         </ResponsiveContainer>
@@ -604,7 +620,7 @@
                                     <h3 className="text-slate-500 font-bold text-xs tracking-widest lowercase mb-4 text-center">market distribution</h3>
                                     <div className="flex-grow w-full">
                                         <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={supplierShare} layout="vertical" margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
+                                            <BarChart data={supplierShare} layout="vertical" margin={{ top: 0, right: 45, left: 0, bottom: 0 }}>
                                                 <XAxis type="number" hide />
                                                 <YAxis dataKey="name" type="category" width={80} axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11, fontWeight: 700}} />
                                                 <Tooltip cursor={{fill: 'rgba(255,255,255,0.4)'}} contentStyle={{borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -3px rgb(0 0 0 / 0.1)'}} />
@@ -612,6 +628,7 @@
                                                     {supplierShare.map((entry, index) => (
                                                         <Cell key={`cell-${index}`} fill={entry.color} />
                                                     ))}
+                                                    <LabelList dataKey="percent" position="right" fill="#64748b" fontSize={10} fontWeight={700} />
                                                 </Bar>
                                             </BarChart>
                                         </ResponsiveContainer>
@@ -744,11 +761,11 @@
             return (
                 <div className="pb-20 relative min-h-screen">
                     <nav className="glass-header sticky top-0 z-50 px-4 md:px-8 py-4 flex items-center justify-between shadow-sm border-b border-slate-200/50">
-                        <div className="flex flex-col">
+                        <div className="flex flex-col justify-center">
                             <span className="font-extrabold text-lg md:text-xl tracking-tight leading-none text-slate-800">
                                 class mon<span className="relative inline-flex items-center">ı<span className="absolute w-1.5 h-1.5 bg-orange-500 rounded-full top-[0.1em] left-1/2 -translate-x-1/2 pointer-events-none"></span></span>tor
                             </span>
-                            <span className="text-slate-500 text-[10px] md:text-[11px] font-bold tracking-widest mt-1 lowercase">this <em>cm</em> can improve our <em>cm</em></span>
+                            <span className="text-slate-500 text-[10px] md:text-[11px] font-bold tracking-widest mt-0.5 lowercase">this <em>cm</em> can improve our <em>cm</em></span>
                         </div>
                         <div className="flex items-center gap-3">
                             <button onClick={onLock} className="text-xs font-bold text-slate-500 hover:text-slate-900 bg-slate-100/80 px-4 py-2 rounded-xl border border-slate-200 shadow-sm transition-all">
@@ -770,7 +787,7 @@
                 <div className="relative min-h-screen">
                     <DashboardContainer onLock={() => setIsLocked(true)} />
                     
-                    <div className={`fixed inset-0 z-[100] bg-slate-100/90 backdrop-blur-3xl transition-opacity duration-500 flex items-center justify-center ${isLocked ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+                    <div className={`fixed inset-0 z-[100] bg-slate-100/40 backdrop-blur-md transition-opacity duration-500 flex items-center justify-center ${isLocked ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                         {isLocked && <LockScreen onUnlock={() => setIsLocked(false)} />}
                     </div>
                 </div>
