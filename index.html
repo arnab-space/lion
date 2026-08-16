@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>class monitor - by cleartrip</title>
+    <title>class monitor - this cm can improve our cm</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -150,19 +150,18 @@
         const OrangeI = () => (
             <span className="relative inline-block leading-none text-slate-900 mx-[1px]">
                 ı
-                <span className="absolute bg-orange-500 rounded-full" style={{ width: '0.24em', height: '0.24em', top: '0.12em', left: '0', right: '0', margin: 'auto' }}></span>
+                <span className="absolute bg-orange-500 rounded-full" style={{ width: '0.20em', height: '0.20em', top: '0.10em', left: '3px', right: '2px', margin: 'auto' }}></span>
             </span>
         );
 
-        // Monochromatic "by Cleartrip" component
         const ByCleartrip = () => (
-            <div className="flex items-center gap-1.5 opacity-60 mt-1">
+            <div className="flex items-center gap-1 opacity-60">
                 <span className="text-[11px] font-bold text-slate-500 tracking-wider">by</span>
                 <div className="flex items-center">
-                    <svg viewBox="0 0 100 100" className="w-3.5 h-3.5 text-slate-500 mr-1" fill="currentColor">
+                    <svg viewBox="0 0 100 100" className="w-3.5 h-3.5 text-slate-500 mr-0.5" fill="currentColor">
                         <path d="M25,10 C15,10 10,15 10,25 L10,75 C10,85 15,90 25,90 L75,90 C85,90 90,85 90,75 L90,25 C90,15 85,10 75,10 Z M45,70 L25,50 L35,40 L45,50 L75,20 L85,30 Z"/>
                     </svg>
-                    <span className="text-[13px] font-black text-slate-500 tracking-tighter" style={{ fontFamily: 'Helvetica, Arial, sans-serif' }}>cleartrip</span>
+                    <span className="text-[12px] font-black text-slate-500 tracking-tighter" style={{ fontFamily: 'Helvetica, Arial, sans-serif' }}>cleartrip</span>
                 </div>
             </div>
         );
@@ -242,12 +241,15 @@
                             <span className="text-[10px] font-bold text-slate-500 tracking-widest lowercase">session locked</span>
                         </div>
 
-                        <h2 className="text-3xl font-black text-slate-900 tracking-tight mb-0">
-                            class mon<OrangeI />tor
-                        </h2>
-                        <ByCleartrip />
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-none mb-0 flex items-center">
+                                class mon<OrangeI />tor
+                            </h2>
+                            <div className="mt-1"><ByCleartrip /></div>
+                        </div>
+                        <p className="text-[10px] font-bold text-slate-500 lowercase tracking-widest mb-8">this <em>cm</em> can improve our <em>cm</em></p>
                         
-                        <div className="space-y-2 relative mx-auto w-4/5 mt-8">
+                        <div className="space-y-2 relative mx-auto w-4/5 mt-2">
                             <div className="relative w-full h-12 border border-slate-200 bg-white/50 rounded-xl overflow-hidden shadow-sm transition-colors focus-within:border-slate-400 focus-within:bg-white">
                                 <input 
                                     type="text" 
@@ -561,12 +563,12 @@
             return (
                 <div className={activeMode === mode ? 'block' : 'hidden'}>
                     
-                    <div className={`transition-all duration-700 ease-in-out w-full max-w-5xl mx-auto px-4 flex flex-col items-center relative z-40 ${hasSearched ? 'mt-6' : 'min-h-[calc(100vh-120px)] justify-center pb-[5vh]'}`}>
+                    <div className={`transition-all duration-700 ease-in-out w-full max-w-5xl mx-auto px-4 flex flex-col items-center relative ${showDropdown ? 'z-[99999]' : 'z-40'} ${hasSearched ? 'mt-6' : 'min-h-[calc(100vh-120px)] justify-center pb-[5vh]'}`}>
                         
                         <div className={`w-full flex flex-col items-center transition-all duration-700 ${hasSearched ? 'mb-4' : 'mb-8'}`}>
                             {!hasSearched && (
                                 <div className="text-center mb-6 pointer-events-none">
-                                    <h1 className="text-4xl md:text-6xl font-black text-slate-800 tracking-tighter mb-2 flex items-center justify-center">
+                                    <h1 className="text-4xl md:text-6xl font-black text-slate-800 tracking-tighter mb-2">
                                         why so ser<OrangeI />ous?
                                     </h1>
                                     <p className="text-sm font-bold text-slate-500 lowercase tracking-widest mt-2">always at your service (24*7)</p>
@@ -876,10 +878,13 @@
                 <div className="pb-20 relative min-h-screen">
                     <nav className="glass-header sticky top-0 z-[60] px-4 md:px-8 py-4 flex items-center justify-between shadow-sm border-b border-slate-200/50">
                         <div className="flex flex-col justify-center">
-                            <span className="font-extrabold text-lg md:text-xl tracking-tight leading-none text-slate-800 flex items-center">
-                                class mon<OrangeI />tor
-                            </span>
-                            <ByCleartrip />
+                            <div className="flex items-center gap-2">
+                                <span className="font-extrabold text-lg md:text-xl tracking-tight leading-none text-slate-800 flex items-center">
+                                    class mon<OrangeI />tor
+                                </span>
+                                <div className="mt-0.5"><ByCleartrip /></div>
+                            </div>
+                            <span className="text-slate-500 text-[10px] md:text-[11px] font-bold tracking-widest mt-1 lowercase">this <em>cm</em> can improve our <em>cm</em></span>
                         </div>
                         <div className="flex flex-col items-center">
                             <div className="bg-slate-200/60 p-1 rounded-xl inline-flex shadow-inner backdrop-blur-md">
