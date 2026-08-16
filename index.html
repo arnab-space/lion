@@ -260,7 +260,8 @@
 
                 let ctWins = 0, totalValid = 0;
                 let suppliers = { Cleartrip: 0, MakeMyTrip: 0, Yatra: 0, TripSure: 0 };
-                let stars = { "5 Star": { ct: 0, comp: 0 }, "4 Star": { ct: 0, comp: 0 }, "3 Star": { ct: 0, comp: 0 }, "2 Star": { ct: 0, comp: 0 } };
+                // Fixed key names to perfectly match the lowercased template
+                let stars = { "5 star": { ct: 0, comp: 0 }, "4 star": { ct: 0, comp: 0 }, "3 star": { ct: 0, comp: 0 }, "2 star": { ct: 0, comp: 0 }, "1 star": { ct: 0, comp: 0 }, "0 star": { ct: 0, comp: 0 } };
                 let processedList = [];
 
                 hotels.forEach(hotel => {
@@ -491,11 +492,11 @@
                                     <div className="flex-grow w-full">
                                         <ResponsiveContainer width="100%" height="100%">
                                             <BarChart data={starData} layout="vertical" margin={{ top: 0, right: 20, left: -20, bottom: 0 }}>
-                                                <XAxis type="number" domain={[25, 60]} hide />
-                                                <YAxis dataKey="name" type="category" hide />
+                                                <XAxis type="number" hide />
+                                                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 11, fontWeight: 700}} width={50} />
                                                 <Tooltip cursor={{fill: 'rgba(255,255,255,0.4)'}} contentStyle={{borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 10px 25px -3px rgb(0 0 0 / 0.1)'}} />
                                                 <Legend iconType="circle" wrapperStyle={{fontSize: '10px', fontWeight: 700, paddingTop: '10px'}} />
-                                                <Bar dataKey="ct win" stackId="a" fill="#ea580c" barSize={12} />
+                                                <Bar dataKey="ct win" stackId="a" fill="#ea580c" barSize={12} radius={[4, 0, 0, 4]} />
                                                 <Bar dataKey="comp win" stackId="a" fill="#cbd5e1" radius={[0, 4, 4, 0]} />
                                             </BarChart>
                                         </ResponsiveContainer>
