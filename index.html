@@ -26,6 +26,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
+        * {
+            caret-color: transparent !important;
+        }
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #f8fafc;
@@ -71,6 +74,23 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        /* Premium Lock Screen Ambient Animations */
+        @keyframes blob {
+            0% { transform: translate(0px, 0px) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0px, 0px) scale(1); }
+        }
+        .animate-blob {
+            animation: blob 10s infinite;
+        }
+        .animation-delay-2000 {
+            animation-delay: 2s;
+        }
+        .animation-delay-4000 {
+            animation-delay: 4s;
+        }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
@@ -80,19 +100,12 @@
         const { useState, useEffect, useMemo, useRef } = React;
         const { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell } = window.Recharts;
 
-        const DEFAULT_CITIES = [
-            "kolkata", "mumbai", "delhi", "bengaluru", "chennai", "hyderabad", "pune", 
-            "ahmedabad", "jaipur", "goa", "dubai", "new york", "singapore", "bangkok", 
-            "london", "gurgaon", "noida", "chandigarh", "kochi", "varanasi", "agra", 
-            "amritsar", "shimla", "manali", "ooty", "mysuru", "patna", "bhopal", 
-            "indore", "lucknow", "surat", "nagpur", "visakhapatnam", "vadodara", "coimbatore"
-        ];
-
+        // Monochrome color palette for charts
         const SUP_COLORS = {
-            cleartrip: "#0f172a",
-            makemytrip: "#475569",
-            yatra: "#94a3b8",
-            tripsure: "#cbd5e1"
+            cleartrip: "#0f172a", // slate-900
+            makemytrip: "#475569", // slate-600
+            yatra: "#94a3b8", // slate-400
+            tripsure: "#cbd5e1" // slate-300
         };
 
         const formatDate = (date) => {
@@ -134,13 +147,13 @@
                     if (mpin === "2141" || mpin === "7003") {
                         const timer = setTimeout(() => {
                             onUnlock();
-                        }, 150);
+                        }, 250);
                         return () => clearTimeout(timer);
                     } else {
                         const timer = setTimeout(() => {
                             setAuthError(true);
                             setMpin("");
-                        }, 200);
+                        }, 300);
                         return () => clearTimeout(timer);
                     }
                 } else {
@@ -154,14 +167,40 @@
             };
 
             return (
-                <div className="glass-card p-8 md:p-12 rounded-3xl shadow-2xl max-w-md w-full text-center animate-in zoom-in duration-300 pointer-events-auto">
-                    <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-1">
-                        class mon<span className="relative inline-block text-slate-900">i<span className="absolute left-0 top-0 text-orange-500 pointer-events-none" style={{clipPath: "inset(0 0 65% 0)"}}>i</span></span>tor
-                    </h2>
-                    <p className="text-xs font-bold text-slate-500 lowercase tracking-widest mb-8">this <em>cm</em> can improve our <em>cm</em></p>
+                <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden w-full bg-slate-50/80">
                     
-                    <div className="space-y-3 relative">
-                        <div className="relative w-full glass-input rounded-2xl overflow-hidden">
+                    {/* Ambient Monochromatic Fluid Background */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg h-[400px] pointer-events-none z-0">
+                        <div className="absolute top-0 -left-4 w-72 h-72 bg-slate-200 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+                        <div className="absolute top-0 -right-4 w-72 h-72 bg-slate-300 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+                        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-slate-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
+                    </div>
+
+                    {/* Premium Deep Glass Card */}
+                    <div className="relative z-10 p-10 md:p-14 rounded-[2.5rem] shadow-2xl max-w-md w-full text-center animate-in zoom-in duration-500 pointer-events-auto border border-white/80 bg-white/40 backdrop-blur-3xl transform transition-transform hover:scale-[1.02]">
+                        <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-2">
+                            class mon<span className="relative inline-block text-slate-900">i<span className="absolute left-0 top-0 text-orange-500 pointer-events-none" style={{clipPath: "inset(0 0 65% 0)"}}>i</span></span>tor
+                        </h2>
+                        <p className="text-xs font-bold text-slate-500 lowercase tracking-widest mb-10">this <em>cm</em> can improve our <em>cm</em></p>
+                        
+                        <div className="relative">
+                            {/* Interactive 4-Box Matrix */}
+                            <div className="flex justify-center gap-3 md:gap-5 mb-2 pointer-events-none">
+                                {[0, 1, 2, 3].map((index) => (
+                                    <div 
+                                        key={index} 
+                                        className={`w-14 h-16 md:w-16 md:h-20 rounded-2xl flex items-center justify-center text-4xl font-black transition-all duration-300 ${
+                                            mpin.length > index 
+                                            ? 'bg-slate-900 text-white shadow-lg scale-105 border-transparent' 
+                                            : 'bg-white/50 text-transparent border border-slate-300 shadow-inner'
+                                        }`}
+                                    >
+                                        {mpin.length > index ? '*' : ''}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Invisible physical input spanning the boxes */}
                             <input 
                                 type="text" 
                                 inputMode="numeric"
@@ -169,15 +208,13 @@
                                 value={mpin} 
                                 onChange={handleMpinChange}
                                 autoFocus
-                                className="w-full text-center text-3xl font-black py-4 focus:outline-none text-transparent bg-transparent relative z-10 caret-transparent"
+                                className="absolute inset-0 w-full h-full opacity-0 text-transparent caret-transparent cursor-default z-20"
                             />
-                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                                <span className="text-3xl font-black tracking-[0.5em] text-black">
-                                    {mpin ? "*".repeat(mpin.length) : <span className="text-slate-300">****</span>}
-                                </span>
+                            
+                            <div className="h-6 mt-4">
+                                {authError && <p className="text-xs font-bold text-slate-700 animate-in fade-in slide-in-from-bottom-1">invalid mpin. please try again.</p>}
                             </div>
                         </div>
-                        {authError && <p className="text-xs font-bold text-slate-700 pt-1">invalid mpin. please try again.</p>}
                     </div>
                 </div>
             );
@@ -770,7 +807,7 @@
                 <div className="relative min-h-screen">
                     <DashboardContainer onLock={() => setIsLocked(true)} />
                     
-                    <div className={`fixed inset-0 z-[100] bg-slate-100/90 backdrop-blur-2xl transition-opacity duration-500 flex items-center justify-center ${isLocked ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+                    <div className={`fixed inset-0 z-[100] bg-slate-100/90 backdrop-blur-3xl transition-opacity duration-500 flex items-center justify-center ${isLocked ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                         {isLocked && <LockScreen onUnlock={() => setIsLocked(false)} />}
                     </div>
                 </div>
