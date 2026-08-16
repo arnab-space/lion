@@ -191,7 +191,7 @@
                 ) : (
                     <h3 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight mb-2">snooping around...</h3>
                 )}
-                <p className="text-sm font-bold text-slate-500 max-w-sm text-center leading-relaxed px-4">bribing receptionists, comparing suppliers, and hunting down the best secret rates.</p>
+                <p className="text-sm font-bold text-slate-500 max-w-sm text-center leading-relaxed">bribing receptionists, comparing suppliers, and hunting down the best secret rates.</p>
             </div>
         );
 
@@ -236,7 +236,7 @@
                         style={{ background: 'radial-gradient(circle at center, rgba(254, 202, 202, 0.7) 0%, rgba(254, 226, 226, 0.2) 60%, transparent 100%)' }}
                     />
                     
-                    <div className={`bg-white/60 backdrop-blur-3xl p-8 md:p-12 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] border border-white max-w-sm w-[90%] md:w-full text-center transition-all duration-700 pointer-events-auto relative overflow-hidden z-10 ${isShattering ? 'scale-125 opacity-0 filter blur-xl brightness-150' : 'scale-100 opacity-100 filter blur-0 brightness-100'} ${isShaking ? 'animate-shake' : ''}`}>
+                    <div className={`bg-white/95 backdrop-blur-3xl p-8 md:p-12 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] border border-white max-w-sm w-full text-center transition-all duration-700 pointer-events-auto relative overflow-hidden z-10 ${isShattering ? 'scale-125 opacity-0 filter blur-xl brightness-150' : 'scale-100 opacity-100 filter blur-0 brightness-100'} ${isShaking ? 'animate-shake' : ''}`}>
                         
                         <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full pointer-events-none mix-blend-overlay z-0">
                             <g style={{ opacity: 0.6 }}>
@@ -257,15 +257,15 @@
                                 <span className="text-[10px] font-bold text-slate-500 tracking-widest lowercase">session locked</span>
                             </div>
 
-                            <div className="flex flex-col items-center justify-center gap-1 mb-1">
-                                <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-none mb-0 flex items-center">
-                                    class mon<OrangeIMonitor />tor
-                                </h2>
-                                <div className="mt-1"><ByCleartrip /></div>
+                            <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-none mb-1">
+                                class mon<OrangeIMonitor />tor
+                            </h2>
+                            <div className="mb-2 mt-1">
+                                <ByCleartrip />
                             </div>
                             <p className="text-[10px] font-bold text-slate-500 lowercase tracking-widest mb-8">this <em>cm</em> can improve our <em>cm</em></p>
                             
-                            <div className="space-y-2 relative mx-auto w-full md:w-4/5 mt-2">
+                            <div className="space-y-2 relative mx-auto w-4/5 mt-2">
                                 <div className="relative w-full h-12 border border-slate-200 bg-white/50 rounded-xl overflow-hidden shadow-sm transition-colors focus-within:border-slate-400 focus-within:bg-white">
                                     <input 
                                         type="text" 
@@ -893,23 +893,18 @@
 
             return (
                 <div className="pb-20 relative min-h-screen">
-                    <nav className="glass-header sticky top-0 z-[60] px-4 md:px-8 py-3 md:py-4 flex flex-col md:flex-row items-center justify-between shadow-sm border-b border-slate-200/50 gap-4 md:gap-0">
-                        <div className="flex justify-between items-center w-full md:w-auto">
-                            <div className="flex flex-col justify-center">
-                                <div className="flex items-center gap-2">
-                                    <span className="font-extrabold text-lg md:text-xl tracking-tight leading-none text-slate-800 flex items-center">
-                                        class mon<OrangeIMonitor />tor
-                                    </span>
-                                    <div className="mt-0.5"><ByCleartrip /></div>
-                                </div>
-                                <span className="text-slate-500 text-[10px] md:text-[11px] font-bold tracking-widest mt-1 lowercase hidden md:block">this <em>cm</em> can improve our <em>cm</em></span>
+                    <nav className="glass-header sticky top-0 z-[60] px-4 md:px-8 py-4 flex items-center justify-between shadow-sm border-b border-slate-200/50">
+                        <div className="flex flex-col justify-center">
+                            <div className="flex items-center gap-2">
+                                <span className="font-extrabold text-lg md:text-xl tracking-tight leading-none text-slate-800 flex items-center">
+                                    class mon<OrangeIMonitor />tor
+                                </span>
+                                <div className="mt-0.5"><ByCleartrip /></div>
                             </div>
-                            <button onClick={onLock} className="md:hidden text-xs font-bold text-slate-500 hover:text-slate-900 bg-slate-100/80 px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm transition-all">
-                                lock
-                            </button>
+                            <span className="text-slate-500 text-[10px] md:text-[11px] font-bold tracking-widest mt-1 lowercase">this <em>cm</em> can improve our <em>cm</em></span>
                         </div>
-                        <div className="flex flex-col items-center w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-                            <div className="bg-slate-200/60 p-1 rounded-xl inline-flex shadow-inner backdrop-blur-md whitespace-nowrap">
+                        <div className="flex flex-col items-center">
+                            <div className="bg-slate-200/60 p-1 rounded-xl inline-flex shadow-inner backdrop-blur-md">
                                 <button 
                                     onClick={() => { setSearchMode('single'); setTabStatus(prev => ({...prev, single: 'idle'})); }} 
                                     className={`px-6 py-2 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${searchMode==='single'?'bg-white shadow-md text-slate-800':'text-slate-500 hover:text-slate-700'}`}>
@@ -926,7 +921,7 @@
                                 </button>
                             </div>
                         </div>
-                        <div className="hidden md:flex items-center gap-3">
+                        <div className="flex items-center gap-3">
                             <button onClick={onLock} className="text-xs font-bold text-slate-500 hover:text-slate-900 bg-slate-100/80 px-4 py-2 rounded-xl border border-slate-200 shadow-sm transition-all">
                                 lock session
                             </button>
@@ -952,7 +947,7 @@
                 <div className="relative min-h-screen">
                     <DashboardContainer onLock={() => { setIsLocked(true); setHasShattered(false); }} />
                     
-                    <div className={`fixed inset-0 z-[999999] bg-slate-100/60 backdrop-blur-2xl transition-opacity duration-700 flex items-center justify-center ${isLocked && !hasShattered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
+                    <div className={`fixed inset-0 z-[999999] bg-slate-50 transition-opacity duration-700 flex items-center justify-center ${isLocked && !hasShattered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                         {isLocked && <LockScreen onUnlock={handleUnlock} />}
                     </div>
                 </div>
