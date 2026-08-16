@@ -5,15 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>iShop API Monitor | Enterprise</title>
     
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Recharts Analytics -->
     <script src="https://unpkg.com/prop-types@15.8.1/prop-types.min.js"></script>
     <script src="https://unpkg.com/recharts@2.12.0/umd/Recharts.js"></script>
+
+    <!-- SheetJS for Excel Export -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    
+    <!-- html2canvas and jsPDF for PDF Report Generation -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
@@ -156,14 +169,17 @@
                         }
                     });
 
-                    // Robust CT_HID extraction supporting all possible property ID keys
-                    const ct_hid = hotel.hotelId || 
-                                   hotel.hotelCode || 
-                                   hotel.id || 
-                                   hotel.hotelInfo?.hotelId || 
-                                   hotel.hotelInfo?.hotelCode || 
-                                   hotel.hotelInfo?.id || 
-                                   "N/A";
+                    // Accurate Cleartrip specific CT_HID extraction from priceSummary
+                    let ct_hid = "N/A";
+                    if (hotel.priceSummary && Array.isArray(hotel.priceSummary)) {
+                        const ctPartner = hotel.priceSummary.find(sup => sup.partnerName?.toLowerCase().includes("cleartrip"));
+                        if (ctPartner && ctPartner.hotelId) {
+                            ct_hid = ctPartner.hotelId;
+                        }
+                    }
+                    if (ct_hid === "N/A") {
+                        ct_hid = hotel.hotelKey || hotel.hotelId || hotel.hotelInfo?.hotelId || "N/A";
+                    }
 
                     processedList.push({
                         ct_hid,
