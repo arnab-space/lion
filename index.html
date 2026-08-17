@@ -494,24 +494,34 @@
                         rawPrices: prices
                     });
 
+                    // UPDATED WIN RATE LOGIC: Exclusive supply counts as a win!
                     if (prices.cleartrip) {
+                        totalValid++;
+                        cStats[qCity].totalValid++;
+                        
                         const compPrices = [prices.makemytrip, prices.yatra, prices.tripsure].filter(p => p !== null);
-                        if (compPrices.length > 0) {
-                            totalValid++;
-                            cStats[qCity].totalValid++;
-                            
+                        let isCtWin = false;
+
+                        if (compPrices.length === 0) {
+                            // Exclusive supply: Cleartrip is sole provider, wins by default
+                            isCtWin = true;
+                        } else {
                             const minComp = Math.min(...compPrices);
                             if (prices.cleartrip <= minComp) {
-                                ctWins++;
-                                cStats[qCity].ctWins++;
+                                isCtWin = true;
                             }
+                        }
 
-                            const ratingInt = Math.floor(hotel.hotelInfo?.starRating || 3);
-                            const starKey = `${ratingInt} star`;
-                            if (stars[starKey]) {
-                                if (prices.cleartrip <= minComp) stars[starKey].ct++;
-                                else stars[starKey].comp++;
-                            }
+                        if (isCtWin) {
+                            ctWins++;
+                            cStats[qCity].ctWins++;
+                        }
+
+                        const ratingInt = Math.floor(hotel.hotelInfo?.starRating || 3);
+                        const starKey = `${ratingInt} star`;
+                        if (stars[starKey]) {
+                            if (isCtWin) stars[starKey].ct++;
+                            else stars[starKey].comp++;
                         }
                     }
                 });
