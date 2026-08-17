@@ -97,7 +97,6 @@
         const { useState, useEffect, useMemo, useRef } = React;
         const { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell, LabelList } = window.Recharts;
 
-        // Embedded City Database matching your JSON file directly
         const EMBEDDED_CITY_DATABASE = {
             "Mumbai": {"city": "Mumbai", "state": " Maharashtra", "country": "IN", "countryName": " India", "loc_id": "357389", "loc_name": "Mumbai", "loc_type": "City", "lat": "19.075986", "lon": "72.877663"},
             "Delhi": {"city": "New Delhi", "state": " National Capital Territory of Delhi", "country": "IN", "countryName": " India", "loc_id": "227760", "loc_name": "New Delhi", "loc_type": "City", "lat": "28.613939", "lon": "77.209023"},
@@ -216,7 +215,7 @@
                 </div>
                 {progress ? (
                     <h3 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight mb-2">
-                        snooping around {progress.city} ({progress.current}/{progress.total})...
+                        snooping around {progress.city || ''} ({progress.current || 1}/{progress.total || 1})...
                     </h3>
                 ) : (
                     <h3 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight mb-2">snooping around...</h3>
@@ -255,7 +254,7 @@
 
             const handleMpinChange = (e) => {
                 const val = e.target.value;
-                setMpin(val.replace(/\D/g, "").slice(0, 4));
+                setMpin(String(val || "").replace(/\D/g, "").slice(0, 4));
             };
 
             return (
@@ -267,17 +266,6 @@
                     
                     <div className={`bg-white/95 backdrop-blur-3xl p-8 md:p-12 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] border border-white max-w-sm w-full text-center transition-all duration-700 pointer-events-auto relative overflow-hidden z-10 ${isShattering ? 'scale-125 opacity-0 filter blur-xl brightness-150' : 'scale-100 opacity-100 filter blur-0 brightness-100'} ${isShaking ? 'animate-shake' : ''}`}>
                         
-                        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="absolute inset-0 w-full h-full pointer-events-none mix-blend-overlay z-0">
-                            <g style={{ opacity: 0.6 }}>
-                                <path d="M50,70 L20,0 L0,10" stroke="#000" strokeWidth="0.3" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 1 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-                                <path d="M50,70 L85,0 L100,10" stroke="#fff" strokeWidth="0.5" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 1 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-                                <path d="M50,70 L100,50 L100,60" stroke="#000" strokeWidth="0.4" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 2 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-                                <path d="M30,30 L0,50" stroke="#fff" strokeWidth="0.6" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 2 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-                                <path d="M50,70 L20,100" stroke="#fff" strokeWidth="0.7" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 3 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.2s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-                                <path d="M70,80 L100,100" stroke="#000" strokeWidth="0.5" fill="none" strokeDasharray="150" strokeDashoffset={mpin.length >= 3 ? 0 : 150} style={{ transition: 'stroke-dashoffset 0.3s cubic-bezier(0.4, 0, 0.2, 1)' }}/>
-                            </g>
-                        </svg>
-
                         <div className="relative z-10 flex flex-col items-center">
                             <div className="flex flex-col items-center justify-center mb-6">
                                 <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mb-2 border border-slate-200">
@@ -361,11 +349,12 @@
 
             const selectCity = (selectedCity) => {
                 if (mode === 'single') {
-                    setCitySearch(selectedCity);
+                    setCitySearch(String(selectedCity || ""));
                     setShowDropdown(false);
                 } else {
-                    if (bulkCities.length < 10 && !bulkCities.includes(selectedCity)) {
-                        setBulkCities([...bulkCities, selectedCity]);
+                    const cName = String(selectedCity || "");
+                    if (bulkCities.length < 10 && !bulkCities.includes(cName)) {
+                        setBulkCities([...bulkCities, cName]);
                     }
                     setCitySearch("");
                     setShowDropdown(false);
@@ -385,9 +374,10 @@
             };
 
             const filteredSuggestions = useMemo(() => {
-                const query = citySearch.trim().toLowerCase();
-                return citiesList.filter(c => {
-                    const matches = query === "" || c.includes(query);
+                const query = String(citySearch || "").trim().toLowerCase();
+                return (citiesList || []).filter(c => {
+                    const item = String(c || "").toLowerCase();
+                    const matches = query === "" || item.includes(query);
                     const notInBulk = mode === 'single' || !bulkCities.includes(c);
                     return matches && notInBulk;
                 });
@@ -395,15 +385,16 @@
 
             const handleSearch = async () => {
                 let citiesToProcess = [];
+                const currentSearchText = String(citySearch || "").trim();
                 if (mode === 'single') {
-                    if (citySearch.trim().length > 0) {
-                        citiesToProcess = [citySearch.trim()];
-                        setLastSearchedCity(citySearch.trim());
+                    if (currentSearchText.length > 0) {
+                        citiesToProcess = [currentSearchText];
+                        setLastSearchedCity(currentSearchText);
                     }
                 } else {
                     citiesToProcess = [...bulkCities];
-                    if (citySearch.trim().length > 0 && !bulkCities.includes(citySearch.trim()) && bulkCities.length < 10) {
-                        citiesToProcess.push(citySearch.trim());
+                    if (currentSearchText.length > 0 && !bulkCities.includes(currentSearchText) && bulkCities.length < 10) {
+                        citiesToProcess.push(currentSearchText);
                     }
                 }
 
@@ -433,13 +424,13 @@
                     }
                     
                     try {
-                        const response = await fetch(`${TUNNEL_URL}/scrape?city=${currentCity}&checkin=${checkIn}&checkout=${checkOut}`);
+                        const response = await fetch(`${TUNNEL_URL}/scrape?city=${encodeURIComponent(currentCity)}&checkin=${checkIn}&checkout=${checkOut}`);
                         const data = await response.json();
                         
-                        if (data.status === "success" && data.hotels && data.hotels.length > 0) {
+                        if (data && data.status === "success" && Array.isArray(data.hotels) && data.hotels.length > 0) {
                             const tagged = data.hotels.map(h => ({ ...h, queryCity: currentCity }));
                             allResults = [...allResults, ...tagged];
-                            if (data.total_count) {
+                            if (typeof data.total_count === 'number') {
                                 accumulatedTotalCount += data.total_count;
                             } else {
                                 accumulatedTotalCount += data.hotels.length;
@@ -463,7 +454,7 @@
             };
 
             const { ctWinRate, supplierShare, starData, parsedHotels, cityStats } = useMemo(() => {
-                if (!hotels || hotels.length === 0) return { ctWinRate: 0, supplierShare: [], starData: [], parsedHotels: [], cityStats: [] };
+                if (!Array.isArray(hotels) || hotels.length === 0) return { ctWinRate: 0, supplierShare: [], starData: [], parsedHotels: [], cityStats: [] };
 
                 let ctWins = 0, totalValid = 0;
                 let suppliers = { cleartrip: 0, makemytrip: 0, yatra: 0, tripsure: 0 };
@@ -473,7 +464,8 @@
                 let processedList = [];
 
                 hotels.forEach(hotel => {
-                    const qCity = hotel.queryCity || "unknown";
+                    if (!hotel) return;
+                    const qCity = String(hotel.queryCity || "unknown");
                     if (!cStats[qCity]) {
                         cStats[qCity] = { totalProps: 0, totalValid: 0, ctWins: 0, sups: { cleartrip: 0, makemytrip: 0, yatra: 0, tripsure: 0 } };
                     }
@@ -481,53 +473,58 @@
 
                     let prices = { cleartrip: null, makemytrip: null, yatra: null, tripsure: null };
 
-                    (hotel.priceSummary || []).forEach(sup => {
-                        const name = sup.partnerName?.toLowerCase() || "";
-                        if (name.includes("cleartrip")) prices.cleartrip = sup.price;
-                        else if (name.includes("makemytrip") || name.includes("mmt")) prices.makemytrip = sup.price;
-                        else if (name.includes("yatra")) prices.yatra = sup.price;
-                        else if (name.includes("tripsure")) prices.tripsure = sup.price;
+                    const priceSummary = Array.isArray(hotel.priceSummary) ? hotel.priceSummary : [];
+                    priceSummary.forEach(sup => {
+                        if (!sup) return;
+                        const name = String(sup.partnerName || "").toLowerCase();
+                        const pVal = Number(sup.price);
+                        if (!isNaN(pVal)) {
+                            if (name.includes("cleartrip")) prices.cleartrip = pVal;
+                            else if (name.includes("makemytrip") || name.includes("mmt")) prices.makemytrip = pVal;
+                            else if (name.includes("yatra")) prices.yatra = pVal;
+                            else if (name.includes("tripsure")) prices.tripsure = pVal;
+                        }
                     });
 
-                    if (prices.cleartrip) { suppliers.cleartrip++; cStats[qCity].sups.cleartrip++; }
-                    if (prices.makemytrip) { suppliers.makemytrip++; cStats[qCity].sups.makemytrip++; }
-                    if (prices.yatra) { suppliers.yatra++; cStats[qCity].sups.yatra++; }
-                    if (prices.tripsure) { suppliers.tripsure++; cStats[qCity].sups.tripsure++; }
+                    if (prices.cleartrip !== null) { suppliers.cleartrip++; cStats[qCity].sups.cleartrip++; }
+                    if (prices.makemytrip !== null) { suppliers.makemytrip++; cStats[qCity].sups.makemytrip++; }
+                    if (prices.yatra !== null) { suppliers.yatra++; cStats[qCity].sups.yatra++; }
+                    if (prices.tripsure !== null) { suppliers.tripsure++; cStats[qCity].sups.tripsure++; }
 
                     let bestSupplier = "n/a";
                     let bestPrice = Infinity;
                     
                     Object.entries(prices).forEach(([sup, price]) => {
-                        if (price && price < bestPrice) {
+                        if (price !== null && price < bestPrice) {
                             bestPrice = price;
                             bestSupplier = sup;
                         }
                     });
 
                     let ct_hid = "n/a";
-                    if (prices.cleartrip !== null && prices.cleartrip !== undefined) {
-                        const ctPartner = (hotel.priceSummary || []).find(sup => sup.partnerName?.toLowerCase().includes("cleartrip"));
+                    if (prices.cleartrip !== null) {
+                        const ctPartner = priceSummary.find(sup => sup && String(sup.partnerName || "").toLowerCase().includes("cleartrip"));
                         if (ctPartner && ctPartner.hotelId) {
-                            ct_hid = ctPartner.hotelId;
+                            ct_hid = String(ctPartner.hotelId);
                         }
                     }
 
-                    const rawImg = hotel.hotelInfo?.image || hotel.hotelInfo?.thumbnailUrl || (Array.isArray(hotel.hotelInfo?.imagesList) ? hotel.hotelInfo.imagesList[0] : null) || null;
+                    const hInfo = hotel.hotelInfo || {};
+                    const rawImg = hInfo.image || hInfo.thumbnailUrl || (Array.isArray(hInfo.imagesList) ? hInfo.imagesList[0] : null) || null;
 
                     processedList.push({
                         queryCity: qCity,
                         ct_hid,
-                        name: hotel.hotelInfo?.name || "unknown hotel",
-                        rating: hotel.hotelInfo?.starRating || "n/a",
-                        location: hotel.hotelInfo?.address || "unknown location",
+                        name: String(hInfo.name || "unknown hotel"),
+                        rating: hInfo.starRating !== undefined ? hInfo.starRating : "n/a",
+                        location: String(hInfo.address || "unknown location"),
                         image: rawImg,
                         bestSupplier,
                         bestPrice: bestPrice === Infinity ? "n/a" : bestPrice,
                         rawPrices: prices
                     });
 
-                    // WIN RATE LOGIC: Exclusive supply counts as a win!
-                    if (prices.cleartrip) {
+                    if (prices.cleartrip !== null) {
                         totalValid++;
                         cStats[qCity].totalValid++;
                         
@@ -535,7 +532,7 @@
                         let isCtWin = false;
 
                         if (compPrices.length === 0) {
-                            isCtWin = true; // Exclusive supply
+                            isCtWin = true;
                         } else {
                             const minComp = Math.min(...compPrices);
                             if (prices.cleartrip <= minComp) {
@@ -548,7 +545,7 @@
                             cStats[qCity].ctWins++;
                         }
 
-                        const ratingInt = Math.floor(hotel.hotelInfo?.starRating || 3);
+                        const ratingInt = Math.floor(Number(hInfo.starRating) || 3);
                         const starKey = `${ratingInt} star`;
                         if (stars[starKey]) {
                             if (isCtWin) stars[starKey].ct++;
@@ -626,7 +623,6 @@
 
             return (
                 <div className={activeMode === mode ? 'block' : 'hidden'}>
-                    
                     <div className={`transition-all duration-700 ease-in-out w-full max-w-5xl mx-auto px-4 flex flex-col items-center relative ${showDropdown ? 'z-[99999]' : 'z-40'} ${hasSearched ? 'mt-6' : 'min-h-[calc(100vh-120px)] justify-center pb-[5vh]'}`}>
                         
                         <div className={`w-full flex flex-col items-center transition-all duration-700 ${hasSearched ? 'mb-4' : 'mb-8'}`}>
@@ -733,7 +729,7 @@
                         </div>
                     )}
 
-                    {hasSearched && !loading && hotels.length > 0 && (
+                    {hasSearched && !loading && Array.isArray(hotels) && hotels.length > 0 && (
                         <div className="max-w-6xl mx-auto mt-8 md:mt-12 px-4 animate-in fade-in slide-in-from-bottom-8 duration-500 relative z-30">
                             
                             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
@@ -921,8 +917,7 @@
 
         const DashboardContainer = ({ onLock }) => {
             const [searchMode, setSearchMode] = useState('single');
-            // Take city suggestions directly from the embedded database keys!
-            const [citiesList, setCitiesList] = useState(() => Object.keys(EMBEDDED_CITY_DATABASE).map(k => k.toLowerCase()));
+            const citiesList = useMemo(() => Object.keys(EMBEDDED_CITY_DATABASE).map(k => String(k || "").toLowerCase()), []);
             const [tabStatus, setTabStatus] = useState({ single: 'idle', bulk: 'idle' });
 
             return (
@@ -940,18 +935,18 @@
                         <div className="flex flex-col items-center">
                             <div className="bg-slate-200/60 p-1 rounded-xl inline-flex shadow-inner backdrop-blur-md">
                                 <button 
-                                    onClick={() => { setSearchMode('single'); setTabStatus(prev => ({...prev, single: 'idle'})); }} 
+                                    onClick={() => setSearchMode('single')} 
                                     className={`px-6 py-2 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${searchMode==='single'?'bg-white shadow-md text-slate-800':'text-slate-500 hover:text-slate-700'}`}>
                                     single city
                                     {tabStatus.single === 'loading' && <svg className="animate-spin w-3 h-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>}
-                                    {tabStatus.single === 'completed' && searchMode !== 'single' && <svg className="w-3 h-3 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                                    {tabStatus.single === 'completed' && <svg className="w-3 h-3 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
                                 </button>
                                 <button 
-                                    onClick={() => { setSearchMode('bulk'); setTabStatus(prev => ({...prev, bulk: 'idle'})); }} 
+                                    onClick={() => setSearchMode('bulk')} 
                                     className={`px-6 py-2 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${searchMode==='bulk'?'bg-white shadow-md text-slate-800':'text-slate-500 hover:text-slate-700'}`}>
                                     bulk process (beta)
                                     {tabStatus.bulk === 'loading' && <svg className="animate-spin w-3 h-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>}
-                                    {tabStatus.bulk === 'completed' && searchMode !== 'bulk' && <svg className="w-3 h-3 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                                    {tabStatus.bulk === 'completed' && <svg className="w-3 h-3 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
                                 </button>
                             </div>
                         </div>
