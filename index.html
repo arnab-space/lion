@@ -26,9 +26,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        * {
-            caret-color: transparent; 
-        }
+        * { caret-color: transparent; }
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #f8fafc;
@@ -42,15 +40,9 @@
             text-transform: lowercase;
             user-select: none;
         }
-        input, button, select {
-            cursor: pointer;
-        }
-        input[type="text"] {
-            user-select: auto;
-        }
-        .search-input {
-            caret-color: #1e293b !important; 
-        }
+        input, button, select { cursor: pointer; }
+        input[type="text"] { user-select: auto; }
+        .search-input { caret-color: #1e293b !important; }
         .glass-card {
             background: rgba(255, 255, 255, 0.75);
             backdrop-filter: blur(16px);
@@ -85,9 +77,7 @@
             60% { transform: translateX(-8px); }
             80% { transform: translateX(8px); }
         }
-        .animate-shake {
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-        }
+        .animate-shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
     </style>
 </head>
 <body class="antialiased min-h-screen flex flex-col">
@@ -97,58 +87,28 @@
         const { useState, useEffect, useMemo, useRef } = React;
         const { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell, LabelList } = window.Recharts;
 
-        const EMBEDDED_CITY_DATABASE = {
-            "Mumbai": {"city": "Mumbai", "state": " Maharashtra", "country": "IN", "countryName": " India", "loc_id": "357389", "loc_name": "Mumbai", "loc_type": "City", "lat": "19.075986", "lon": "72.877663"},
-            "Delhi": {"city": "New Delhi", "state": " National Capital Territory of Delhi", "country": "IN", "countryName": " India", "loc_id": "227760", "loc_name": "New Delhi", "loc_type": "City", "lat": "28.613939", "lon": "77.209023"},
-            "Bangalore": {"city": "Bengaluru", "state": " Karnataka", "country": "IN", "countryName": " India", "loc_id": "341153", "loc_name": "Bengaluru", "loc_type": "City", "lat": "12.971599", "lon": "77.594566"},
-            "Hyderabad": {"city": "Hyderabad", "state": " Telangana", "country": "IN", "countryName": " India", "loc_id": "227706", "loc_name": "Hyderabad", "loc_type": "City", "lat": "17.385044", "lon": "78.486671"},
-            "Chennai": {"city": "Chennai", "state": "Tamil Nadu", "country": "IN", "countryName": "India", "loc_id": "228269", "loc_name": "Chennai", "loc_type": "City", "lat": "13.08268", "lon": "80.270721"},
-            "Jaipur": {"city": "Jaipur", "state": " Rajasthan", "country": "IN", "countryName": " India", "loc_id": "227736", "loc_name": "Jaipur", "loc_type": "City", "lat": "26.912428", "lon": "75.78727"},
-            "Udaipur": {"city": "Udaipur", "state": " Rajasthan", "country": "IN", "countryName": " India", "loc_id": "246754", "loc_name": "Udaipur", "loc_type": "City", "lat": "24.58163", "lon": "73.68771"},
-            "Pune": {"city": "Pune", "state": " Maharashtra", "country": "IN", "countryName": " India", "loc_id": "328605", "loc_name": "Pune", "loc_type": "City", "lat": "18.520433", "lon": "73.856737"},
-            "Kolkata": {"city": "Kolkata", "state": " West Bengal", "country": "IN", "countryName": " India", "loc_id": "360530", "loc_name": "Kolkata", "loc_type": "City", "lat": "22.572645", "lon": "88.363892"},
-            "Varanasi": {"city": "Varanasi", "state": " Uttar Pradesh", "country": "IN", "countryName": " India", "loc_id": "246776", "loc_name": "Varanasi", "loc_type": "City", "lat": "25.317646", "lon": "82.973915"},
-            "Ahmedabad": {"city": "Ahmedabad", "state": " Gujarat", "country": "IN", "countryName": " India", "loc_id": "246774", "loc_name": "Ahmedabad", "loc_type": "City", "lat": "23.022511", "lon": "72.571353"},
-            "Gurugram": {"city": "Gurugram", "state": " Haryana", "country": "IN", "countryName": " India", "loc_id": "330286", "loc_name": "Gurugram", "loc_type": "City", "lat": "28.459501", "lon": "77.02663"},
-            "Lonavala": {"city": "Lonavala", "state": " Maharashtra", "country": "IN", "countryName": " India", "loc_id": "333732", "loc_name": "Lonavala", "loc_type": "City", "lat": "18.754618", "lon": "73.406235"},
-            "Candolim": {"city": "Candolim", "state": " Goa", "country": "IN", "countryName": " India", "loc_id": "328595", "loc_name": "Candolim", "loc_type": "City", "lat": "15.514526", "lon": "73.76838"},
-            "Indore": {"city": "Indore", "state": " Madhya Pradesh", "country": "IN", "countryName": " India", "loc_id": "227710", "loc_name": "Indore", "loc_type": "City", "lat": "22.719568", "lon": "75.857727"},
-            "Mysore": {"city": "Mysore", "state": " Karnataka", "country": "IN", "countryName": " India", "loc_id": "364120", "loc_name": "Mysore", "loc_type": "City", "lat": "12.295811", "lon": "76.639381"},
-            "Lucknow": {"city": "Lucknow", "state": " Uttar Pradesh", "country": "IN", "countryName": " India", "loc_id": "228250", "loc_name": "Lucknow", "loc_type": "City", "lat": "26.846693", "lon": "80.946167"},
-            "Pondicherry": {"city": "Puducherry", "state": " Puducherry", "country": "IN", "countryName": " India", "loc_id": "334134", "loc_name": "Puducherry", "loc_type": "City", "lat": "11.95066", "lon": "79.791284"},
-            "Kochi": {"city": "Kochi", "state": " Kerala", "country": "IN", "countryName": " India", "loc_id": "329184", "loc_name": "Kochi", "loc_type": "City", "lat": "9.931233", "lon": "76.267304"},
-            "Calangute": {"city": "Calangute", "state": " Goa", "country": "IN", "countryName": " India", "loc_id": "330255", "loc_name": "Calangute", "loc_type": "City", "lat": "15.531124", "lon": "73.762497"},
-            "Munnar": {"city": "Munnar", "state": " Kerala", "country": "IN", "countryName": " India", "loc_id": "328949", "loc_name": "Munnar", "loc_type": "City", "lat": "10.088933", "lon": "77.059525"},
-            "Puri": {"city": "Puri", "state": " Odisha", "country": "IN", "countryName": " India", "loc_id": "328623", "loc_name": "Puri", "loc_type": "City", "lat": "19.813383", "lon": "85.831467"},
-            "Ooty": {"city": "Ooty", "state": " Tamil Nadu", "country": "IN", "countryName": " India", "loc_id": "343016", "loc_name": "Ooty", "loc_type": "City", "lat": "11.406775", "lon": "76.703423"},
-            "Nashik": {"city": "Nashik", "state": " Maharashtra", "country": "IN", "countryName": " India", "loc_id": "360531", "loc_name": "Nashik", "loc_type": "City", "lat": "19.997454", "lon": "73.789803"},
-            "Agra": {"city": "Agra", "state": " Uttar Pradesh", "country": "IN", "countryName": " India", "loc_id": "246663", "loc_name": "Agra", "loc_type": "City", "lat": "27.176665", "lon": "78.008071"},
-            "Visakhapatnam": {"city": "Visakhapatnam", "state": " Andhra Pradesh", "country": "IN", "countryName": " India", "loc_id": "246781", "loc_name": "Visakhapatnam", "loc_type": "City", "lat": "17.686815", "lon": "83.218483"},
-            "Mussoorie": {"city": "Mussoorie", "state": " Uttarakhand", "country": "IN", "countryName": " India", "loc_id": "327891", "loc_name": "Mussoorie", "loc_type": "City", "lat": "30.459909", "lon": "78.066399"},
-            "Chandigarh": {"city": "Chandigarh", "state": " Chandigarh", "country": "IN", "countryName": " India", "loc_id": "334042", "loc_name": "Chandigarh", "loc_type": "City", "lat": "30.733315", "lon": "76.779419"},
-            "Amritsar": {"city": "Amritsar", "state": " Punjab", "country": "IN", "countryName": " India", "loc_id": "246843", "loc_name": "Amritsar", "loc_type": "City", "lat": "31.633985", "lon": "74.872259"},
-            "Mahabaleshwar": {"city": "Mahabaleshwar", "state": " Maharashtra", "country": "IN", "countryName": " India", "loc_id": "333615", "loc_name": "Mahabaleshwar", "loc_type": "City", "lat": "17.92644", "lon": "73.654032"},
-            "Noida": {"city": "Noida", "state": " Uttar Pradesh", "country": "IN", "countryName": " India", "loc_id": "327747", "loc_name": "Noida", "loc_type": "City", "lat": "28.535517", "lon": "77.391029"},
-            "Rishikesh": {"city": "Rishikesh", "state": " Uttarakhand", "country": "IN", "countryName": " India", "loc_id": "329199", "loc_name": "Rishikesh", "loc_type": "City", "lat": "30.086927", "lon": "78.267609"},
-            "Panaji": {"city": "Panaji", "state": " Goa", "country": "IN", "countryName": " India", "loc_id": "328649", "loc_name": "Panaji", "loc_type": "City", "lat": "15.498725", "lon": "73.827812"},
-            "Dehradun": {"city": "Dehradun", "state": " Uttarakhand", "country": "IN", "countryName": " India", "loc_id": "358325", "loc_name": "Dehradun", "loc_type": "City", "lat": "30.316494", "lon": "78.032188"},
-            "Madurai": {"city": "Madurai", "state": " Tamil Nadu", "country": "IN", "countryName": " India", "loc_id": "227729", "loc_name": "Madurai", "loc_type": "City", "lat": "9.925201", "lon": "78.119774"},
-            "Shimla": {"city": "Shimla", "state": " Himachal Pradesh", "country": "IN", "countryName": " India", "loc_id": "246679", "loc_name": "Shimla", "loc_type": "City", "lat": "31.104116", "lon": "77.17164"},
-            "New Delhi": {"city": "New Delhi", "state": " National Capital Territory of Delhi", "country": "IN", "countryName": " India", "loc_id": "227760", "loc_name": "New Delhi", "loc_type": "City", "lat": "28.613939", "lon": "77.209023"},
-            "Baga": {"city": "Baga", "state": " Goa", "country": "IN", "countryName": " India", "loc_id": "334261", "loc_name": "Baga", "loc_type": "City", "lat": "15.55705", "lon": "73.754852"},
-            "Patna": {"city": "Patna", "state": " Bihar", "country": "IN", "countryName": " India", "loc_id": "228349", "loc_name": "Patna", "loc_type": "City", "lat": "25.594095", "lon": "85.137566"},
-            "Manali": {"city": "Manali", "state": " Himachal Pradesh", "country": "IN", "countryName": " India", "loc_id": "334045", "loc_name": "Manali", "loc_type": "City", "lat": "32.243881", "lon": "77.189292"},
-            "Bhopal": {"city": "Bhopal", "state": " Madhya Pradesh", "country": "IN", "countryName": " India", "loc_id": "333920", "loc_name": "Bhopal", "loc_type": "City", "lat": "23.259929", "lon": "77.412613"},
-            "Goa": {"city": "Goa", "state": "Goa", "country": "IN", "countryName": " India", "loc_id": "328959", "loc_name": "Goa", "loc_type": "State", "lat": "15.498995", "lon": "73.828214"},
-            "Surat": {"city": "Surat", "state": " Gujarat", "country": "IN", "countryName": " India", "loc_id": "246688", "loc_name": "Surat", "loc_type": "City", "lat": "21.170248", "lon": "72.831063"},
-            "London": {"city": "London", "state": " England", "country": "GB", "countryName": " United Kingdom", "loc_id": "437162", "loc_name": "London", "loc_type": "City", "lat": "51.50746", "lon": "-0.127673"},
-            "Paris": {"city": "Paris", "state": "Paris", "country": "FR", "countryName": " France", "loc_id": "437227", "loc_name": "Paris", "loc_type": "City", "lat": "48.853564", "lon": "2.348095"},
-            "New York": {"city": "New York", "state": " New York", "country": "US", "countryName": " United States of America", "loc_id": "4349", "loc_name": "New York", "loc_type": "City", "lat": "40.712843", "lon": "-74.005966"},
-            "Dubai": {"city": "Dubai", "state": " Dubai", "country": "AE", "countryName": " United Arab Emirates", "loc_id": "221688", "loc_name": "Dubai", "loc_type": "City", "lat": "25.27063", "lon": "55.30037"},
-            "Singapore": {"city": "Singapore", "state": " Singapore", "country": "SG", "countryName": " Singapore", "loc_id": "228221", "loc_name": "Singapore", "loc_type": "City", "lat": "1.3521", "lon": "103.8198"},
-            "Bangkok": {"city": "Bangkok", "state": " Bangkok Province", "country": "TH", "countryName": " Thailand", "loc_id": "227782", "loc_name": "Bangkok", "loc_type": "City", "lat": "13.7475", "lon": "100.53601"},
-            "Tokyo": {"city": "Tokyo", "state": " Tokyo Prefecture", "country": "JP", "countryName": " Japan", "loc_id": "246750", "loc_name": "Tokyo", "loc_type": "City", "lat": "35.681143", "lon": "139.767208"},
-            "Coimbatore": {"city": "Coimbatore (CJB)", "state": "Coimbatore", "country": "IN", "countryName": " India (CJB)", "loc_id": "328095", "loc_name": "Coimbatore (CJB)", "loc_type": "Airport", "lat": "11.030958", "lon": "77.038686"}
+        const CITIES_LIST = [
+            "mumbai", "delhi", "bangalore", "hyderabad", "chennai", "jaipur", "udaipur", 
+            "pune", "kolkata", "varanasi", "ahmedabad", "gurugram", "lonavala", "candolim", 
+            "indore", "mysore", "lucknow", "pondicherry", "kochi", "calangute", "munnar", 
+            "puri", "ooty", "nashik", "agra", "visakhapatnam", "mussoorie", "chandigarh", 
+            "amritsar", "mahabaleshwar", "noida", "rishikesh", "panaji", "dehradun", 
+            "madurai", "shimla", "new delhi", "baga", "patna", "manali", "bhopal", "goa", "surat", "coimbatore"
+        ];
+
+        const CITY_STATES = {
+            "kolkata": "west bengal", "mumbai": "maharashtra", "delhi": "delhi",
+            "bangalore": "karnataka", "chennai": "tamil nadu", "hyderabad": "telangana",
+            "pune": "maharashtra", "ahmedabad": "gujarat", "jaipur": "rajasthan",
+            "goa": "goa", "dubai": "uae", "new york": "new york", "singapore": "singapore",
+            "bangkok": "thailand", "london": "england", "gurgaon": "haryana",
+            "noida": "uttar pradesh", "chandigarh": "chandigarh", "kochi": "kerala",
+            "varanasi": "uttar pradesh", "agra": "uttar pradesh", "amritsar": "punjab",
+            "shimla": "himachal pradesh", "manali": "himachal pradesh", "ooty": "tamil nadu",
+            "mysuru": "karnataka", "patna": "bihar", "bhopal": "madhya pradesh",
+            "indore": "madhya pradesh", "lucknow": "uttar pradesh", "surat": "gujarat",
+            "nagpur": "maharashtra", "visakhapatnam": "andhra pradesh", "vadodara": "gujarat",
+            "coimbatore": "tamil nadu"
         };
 
         const SUP_COLORS = {
@@ -259,13 +219,10 @@
 
             return (
                 <>
-                    <div 
-                        className={`fixed inset-0 pointer-events-none transition-opacity duration-300 z-0 ${isShaking ? 'opacity-100' : 'opacity-0'}`} 
-                        style={{ background: 'radial-gradient(circle at center, rgba(254, 202, 202, 0.7) 0%, rgba(254, 226, 226, 0.2) 60%, transparent 100%)' }}
-                    />
+                    <div className={`fixed inset-0 pointer-events-none transition-opacity duration-300 z-0 ${isShaking ? 'opacity-100' : 'opacity-0'}`} 
+                        style={{ background: 'radial-gradient(circle at center, rgba(254, 202, 202, 0.7) 0%, rgba(254, 226, 226, 0.2) 60%, transparent 100%)' }} />
                     
                     <div className={`bg-white/95 backdrop-blur-3xl p-8 md:p-12 rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] border border-white max-w-sm w-full text-center transition-all duration-700 pointer-events-auto relative overflow-hidden z-10 ${isShattering ? 'scale-125 opacity-0 filter blur-xl brightness-150' : 'scale-100 opacity-100 filter blur-0 brightness-100'} ${isShaking ? 'animate-shake' : ''}`}>
-                        
                         <div className="relative z-10 flex flex-col items-center">
                             <div className="flex flex-col items-center justify-center mb-6">
                                 <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center mb-2 border border-slate-200">
@@ -277,9 +234,7 @@
                             <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-none mb-1">
                                 class mon<OrangeIMonitor />tor
                             </h2>
-                            <div className="mb-2 mt-1">
-                                <ByCleartrip />
-                            </div>
+                            <div className="mb-2 mt-1"><ByCleartrip /></div>
                             <p className="text-[10px] font-bold text-slate-500 lowercase tracking-widest mb-8">this <em>cm</em> can improve our <em>cm</em></p>
                             
                             <div className="space-y-2 relative mx-auto w-4/5 mt-2">
@@ -295,9 +250,7 @@
                                     />
                                     <div className="absolute inset-0 flex items-center justify-center gap-3 pointer-events-none z-0">
                                         {[0, 1, 2, 3].map((idx) => (
-                                            <span key={idx} className={`text-4xl font-black mt-3 flex items-center justify-center h-full transition-all duration-200 ${idx < mpin.length ? 'text-slate-900 scale-110' : 'text-slate-300 scale-100'}`}>
-                                                *
-                                            </span>
+                                            <span key={idx} className={`text-4xl font-black mt-3 flex items-center justify-center h-full transition-all duration-200 ${idx < mpin.length ? 'text-slate-900 scale-110' : 'text-slate-300 scale-100'}`}>*</span>
                                         ))}
                                     </div>
                                 </div>
@@ -637,17 +590,14 @@
                         </div>
 
                         <div className="glass-card p-3 rounded-3xl flex flex-col md:flex-row items-center gap-3 shadow-xl w-full">
-                            
                             <div className="flex-1 flex items-center px-4 md:px-5 py-3.5 glass-input rounded-2xl relative w-full" ref={dropdownRef}>
                                 <svg className="w-5 h-5 text-slate-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                                 <div className="flex flex-col w-full relative">
                                     
                                     {mode === 'bulk' && bulkCities.length > 0 && (
-                                        <div 
-                                            className="flex flex-wrap gap-1.5 mb-1.5 mt-1 transition-all"
+                                        <div className="flex flex-wrap gap-1.5 mb-1.5 mt-1 transition-all"
                                             onMouseEnter={() => setExpandTags(true)}
-                                            onMouseLeave={() => setExpandTags(false)}
-                                        >
+                                            onMouseLeave={() => setExpandTags(false)}>
                                             {bulkCities.slice(0, expandTags ? bulkCities.length : 2).map(c => (
                                                 <span key={c} className="bg-slate-200 text-slate-700 text-[10px] font-black px-2 py-1 rounded-md flex items-center gap-1 shadow-sm">
                                                     {c} 
@@ -678,11 +628,8 @@
                                         <div className="absolute top-full left-0 mt-3 w-full bg-white/95 backdrop-blur-xl border border-slate-200/80 rounded-2xl shadow-2xl max-h-64 overflow-y-auto z-[99999] py-2">
                                             {filteredSuggestions.length > 0 ? (
                                                 filteredSuggestions.map((item, idx) => (
-                                                    <div 
-                                                        key={idx} 
-                                                        onClick={(e) => { e.stopPropagation(); selectCity(item); }}
-                                                        className="pl-12 pr-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer transition-all border-b border-slate-50 last:border-none flex items-center justify-between"
-                                                    >
+                                                    <div key={idx} onClick={(e) => { e.stopPropagation(); selectCity(item); }}
+                                                        className="pl-12 pr-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 cursor-pointer transition-all border-b border-slate-50 last:border-none flex items-center justify-between">
                                                         <span>{item}</span>
                                                         <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">select</span>
                                                     </div>
@@ -721,9 +668,7 @@
 
                     {error && !loading && (
                         <div className="max-w-md mx-auto mt-16 md:mt-24 text-center glass-card p-8 md:p-10 rounded-3xl animate-in fade-in zoom-in duration-300 shadow-xl relative z-30">
-                            <div className="bg-slate-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-slate-200 text-slate-500 text-3xl">
-                                ⚠
-                            </div>
+                            <div className="bg-slate-100 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 border border-slate-200 text-slate-500 text-3xl">⚠</div>
                             <h3 className="text-xl font-bold text-slate-800 mb-2">no results found</h3>
                             <p className="text-sm text-slate-500 font-medium leading-relaxed">{error}</p>
                         </div>
@@ -832,10 +777,8 @@
                             )}
 
                             <div className="flex flex-col items-center mt-12 mb-6">
-                                <button 
-                                    onClick={() => setShowListings(!showListings)} 
-                                    className="glass-card px-8 py-3 rounded-full text-sm font-black text-slate-700 hover:text-slate-900 hover:bg-white transition-all shadow-md flex items-center gap-2"
-                                >
+                                <button onClick={() => setShowListings(!showListings)} 
+                                    className="glass-card px-8 py-3 rounded-full text-sm font-black text-slate-700 hover:text-slate-900 hover:bg-white transition-all shadow-md flex items-center gap-2">
                                     {showListings ? 'hide properties' : `view all ${displayedHotels.length} properties`}
                                     <svg className={`w-4 h-4 transition-transform ${showListings ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
@@ -845,18 +788,14 @@
                                 <div className="space-y-4 animate-in fade-in slide-in-from-top-4 duration-500">
                                     {displayedHotels.map((hotel, idx) => (
                                         <div key={idx} className="glass-card rounded-3xl p-4 flex flex-col md:flex-row gap-5 hover:bg-white/90 transition-all duration-300 group shadow-md border border-slate-200">
-                                            
                                             <div className="w-full md:w-52 h-48 md:h-36 rounded-2xl bg-gradient-to-br from-slate-200 to-slate-300 overflow-hidden relative shadow-inner flex-shrink-0 flex items-center justify-center">
                                                 {hotel.image ? (
-                                                    <img 
-                                                        src={hotel.image} 
-                                                        alt="hotel" 
+                                                    <img src={hotel.image} alt="hotel" 
                                                         onError={(e) => { 
                                                             e.target.style.display = 'none'; 
                                                             if(e.target.nextElementSibling) e.target.nextElementSibling.style.display = 'flex';
                                                         }}
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 grayscale" 
-                                                    />
+                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 grayscale" />
                                                 ) : null}
                                                 
                                                 <div className={`w-full h-full flex-col items-center justify-center text-slate-400 bg-slate-200 ${hotel.image ? 'hidden' : 'flex'}`}>
@@ -865,24 +804,18 @@
                                                 </div>
 
                                                 {hotel.bestSupplier === 'cleartrip' && (
-                                                    <div className="absolute top-3 left-3 bg-slate-900/90 backdrop-blur text-white text-[10px] font-black tracking-wider px-2.5 py-1 rounded-lg shadow-md z-10">
-                                                        ct win
-                                                    </div>
+                                                    <div className="absolute top-3 left-3 bg-slate-900/90 backdrop-blur text-white text-[10px] font-black tracking-wider px-2.5 py-1 rounded-lg shadow-md z-10">ct win</div>
                                                 )}
                                                 
                                                 {mode === 'bulk' && (
-                                                    <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur text-slate-800 border border-slate-300 text-[10px] font-bold px-2 py-1 rounded-md z-10 shadow-sm">
-                                                        {hotel.queryCity}
-                                                    </div>
+                                                    <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur text-slate-800 border border-slate-300 text-[10px] font-bold px-2 py-1 rounded-md z-10 shadow-sm">{hotel.queryCity}</div>
                                                 )}
                                             </div>
 
                                             <div className="flex-1 flex flex-col md:flex-row justify-between py-1 pr-2 gap-4">
                                                 <div className="flex flex-col justify-center">
                                                     <div className="flex items-center gap-2 mb-2">
-                                                        <span className="text-[11px] font-black text-slate-700 bg-white px-2.5 py-1 rounded-lg border border-slate-300 shadow-sm">
-                                                            ★ {hotel.rating}
-                                                        </span>
+                                                        <span className="text-[11px] font-black text-slate-700 bg-white px-2.5 py-1 rounded-lg border border-slate-300 shadow-sm">★ {hotel.rating}</span>
                                                         <span className="text-[11px] font-bold text-slate-400 tracking-wider">id: {hotel.ct_hid}</span>
                                                     </div>
                                                     <h2 className="text-lg md:text-xl font-bold text-slate-800 leading-snug mb-1 group-hover:text-slate-600 transition-colors">{hotel.name}</h2>
@@ -896,9 +829,7 @@
                                                             <div className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter">₹{hotel.bestPrice.toLocaleString('en-IN')}</div>
                                                             <span className={`text-[10px] font-bold px-3 py-1.5 rounded-xl lowercase tracking-wider mt-0 md:mt-1.5 shadow-sm ${
                                                                 hotel.bestSupplier === 'cleartrip' ? 'bg-slate-800 text-white' : 'bg-slate-200 text-slate-700'
-                                                            }`}>
-                                                                {hotel.bestSupplier}
-                                                            </span>
+                                                            }`}>{hotel.bestSupplier}</span>
                                                         </div>
                                                     ) : (
                                                         <span className="bg-slate-100 text-slate-400 font-bold text-xs px-3 py-1.5 rounded-xl">unavailable</span>
@@ -917,7 +848,6 @@
 
         const DashboardContainer = ({ onLock }) => {
             const [searchMode, setSearchMode] = useState('single');
-            const citiesList = useMemo(() => Object.keys(EMBEDDED_CITY_DATABASE).map(k => String(k || "").toLowerCase()), []);
             const [tabStatus, setTabStatus] = useState({ single: 'idle', bulk: 'idle' });
 
             return (
@@ -934,15 +864,13 @@
                         </div>
                         <div className="flex flex-col items-center">
                             <div className="bg-slate-200/60 p-1 rounded-xl inline-flex shadow-inner backdrop-blur-md">
-                                <button 
-                                    onClick={() => setSearchMode('single')} 
+                                <button onClick={() => setSearchMode('single')} 
                                     className={`px-6 py-2 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${searchMode==='single'?'bg-white shadow-md text-slate-800':'text-slate-500 hover:text-slate-700'}`}>
                                     single city
                                     {tabStatus.single === 'loading' && <svg className="animate-spin w-3 h-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>}
                                     {tabStatus.single === 'completed' && <svg className="w-3 h-3 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
                                 </button>
-                                <button 
-                                    onClick={() => setSearchMode('bulk')} 
+                                <button onClick={() => setSearchMode('bulk')} 
                                     className={`px-6 py-2 text-xs font-black rounded-lg transition-all flex items-center gap-1.5 ${searchMode==='bulk'?'bg-white shadow-md text-slate-800':'text-slate-500 hover:text-slate-700'}`}>
                                     bulk process (beta)
                                     {tabStatus.bulk === 'loading' && <svg className="animate-spin w-3 h-3 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>}
@@ -957,8 +885,8 @@
                         </div>
                     </nav>
 
-                    <SearchEngine mode="single" activeMode={searchMode} setMode={setSearchMode} citiesList={citiesList} onLoadStart={() => setTabStatus(p => ({...p, single: 'loading'}))} onLoadEnd={() => setTabStatus(p => ({...p, single: 'completed'}))} />
-                    <SearchEngine mode="bulk" activeMode={searchMode} setMode={setSearchMode} citiesList={citiesList} onLoadStart={() => setTabStatus(p => ({...p, bulk: 'loading'}))} onLoadEnd={() => setTabStatus(p => ({...p, bulk: 'completed'}))} />
+                    <SearchEngine mode="single" activeMode={searchMode} setMode={setSearchMode} citiesList={CITIES_LIST} onLoadStart={() => setTabStatus(p => ({...p, single: 'loading'}))} onLoadEnd={() => setTabStatus(p => ({...p, single: 'completed'}))} />
+                    <SearchEngine mode="bulk" activeMode={searchMode} setMode={setSearchMode} citiesList={CITIES_LIST} onLoadStart={() => setTabStatus(p => ({...p, bulk: 'loading'}))} onLoadEnd={() => setTabStatus(p => ({...p, bulk: 'completed'}))} />
                 </div>
             );
         };
@@ -975,7 +903,6 @@
             return (
                 <div className="relative min-h-screen">
                     <DashboardContainer onLock={() => { setIsLocked(true); setHasShattered(false); }} />
-                    
                     <div className={`fixed inset-0 z-[999999] bg-slate-50 transition-opacity duration-700 flex items-center justify-center ${isLocked && !hasShattered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
                         {isLocked && <LockScreen onUnlock={handleUnlock} />}
                     </div>
