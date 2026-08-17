@@ -147,7 +147,6 @@
             );
         };
 
-        // Serious dot (Preserved styling)
         const OrangeISerious = () => (
             <span className="relative inline-block leading-none text-slate-900 mx-[1px]">
                 ı
@@ -155,7 +154,6 @@
             </span>
         );
 
-        // Monitor dot (New precise styling)
         const OrangeIMonitor = () => (
             <span className="relative inline-block leading-none text-slate-900 mx-[1px]">
                 ı
@@ -230,7 +228,6 @@
 
             return (
                 <>
-                    {/* Error Background Gradient behind the lock card */}
                     <div 
                         className={`fixed inset-0 pointer-events-none transition-opacity duration-300 z-0 ${isShaking ? 'opacity-100' : 'opacity-0'}`} 
                         style={{ background: 'radial-gradient(circle at center, rgba(254, 202, 202, 0.7) 0%, rgba(254, 226, 226, 0.2) 60%, transparent 100%)' }}
@@ -316,6 +313,7 @@
             const [loading, setLoading] = useState(false);
             const [scrapeProgress, setScrapeProgress] = useState(null);
             const [hotels, setHotels] = useState([]);
+            const [totalCount, setTotalCount] = useState(0);
             const [error, setError] = useState(null);
             const [listFilter, setListFilter] = useState('all');
 
@@ -388,10 +386,12 @@
                 setError(null);
                 setShowDropdown(false);
                 setHotels([]); 
+                setTotalCount(0);
                 setListFilter('all');
                 setShowListings(false);
                 
                 let allResults = [];
+                let accumulatedTotalCount = 0;
                 const TUNNEL_URL = "http://127.0.0.1:8001";
 
                 for (let i = 0; i < citiesToProcess.length; i++) {
@@ -407,6 +407,11 @@
                         if (data.status === "success" && data.hotels && data.hotels.length > 0) {
                             const tagged = data.hotels.map(h => ({ ...h, queryCity: currentCity }));
                             allResults = [...allResults, ...tagged];
+                            if (data.total_count) {
+                                accumulatedTotalCount += data.total_count;
+                            } else {
+                                accumulatedTotalCount += data.hotels.length;
+                            }
                         }
                     } catch (err) {
                         console.error(`failed scraping ${currentCity}`);
@@ -415,6 +420,7 @@
 
                 if (allResults.length > 0) {
                     setHotels(allResults);
+                    setTotalCount(accumulatedTotalCount);
                 } else {
                     setError("website returned 0 properties. check proxy or session state.");
                 }
@@ -613,7 +619,7 @@
                                             ))}
                                             {!expandTags && bulkCities.length > 2 && (
                                                 <span className="bg-slate-100 text-slate-500 text-[10px] font-black px-2 py-1 rounded-md flex items-center shadow-sm cursor-pointer"
-                                                      onClick={(e) => { e.stopPropagation(); setExpandTags(true); }}>
+                                                    onClick={(e) => { e.stopPropagation(); setExpandTags(true); }}>
                                                     +{bulkCities.length - 2} more
                                                 </span>
                                             )}
@@ -701,7 +707,7 @@
                                             <span className="w-2 h-2 bg-slate-500 rounded-full animate-pulse"></span>
                                             live pricing assistant
                                         </span>
-                                        <span className="text-slate-500 text-sm font-semibold">{hotels.length} properties analyzed</span>
+                                        <span className="text-slate-500 text-sm font-semibold">{totalCount > 0 ? totalCount : hotels.length} properties analyzed</span>
                                     </div>
                                 </div>
                                 <div className="flex gap-3">
