@@ -97,27 +97,59 @@
         const { useState, useEffect, useMemo, useRef } = React;
         const { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, Cell, LabelList } = window.Recharts;
 
-        const DEFAULT_CITIES = [
-            "kolkata", "mumbai", "delhi", "bengaluru", "chennai", "hyderabad", "pune", 
-            "ahmedabad", "jaipur", "goa", "dubai", "new york", "singapore", "bangkok", 
-            "london", "gurgaon", "noida", "chandigarh", "kochi", "varanasi", "agra", 
-            "amritsar", "shimla", "manali", "ooty", "mysuru", "patna", "bhopal", 
-            "indore", "lucknow", "surat", "nagpur", "visakhapatnam", "vadodara", "coimbatore"
-        ];
-
-        const CITY_STATES = {
-            "kolkata": "west bengal", "mumbai": "maharashtra", "delhi": "delhi",
-            "bengaluru": "karnataka", "chennai": "tamil nadu", "hyderabad": "telangana",
-            "pune": "maharashtra", "ahmedabad": "gujarat", "jaipur": "rajasthan",
-            "goa": "goa", "dubai": "uae", "new york": "new york", "singapore": "singapore",
-            "bangkok": "thailand", "london": "england", "gurgaon": "haryana",
-            "noida": "uttar pradesh", "chandigarh": "chandigarh", "kochi": "kerala",
-            "varanasi": "uttar pradesh", "agra": "uttar pradesh", "amritsar": "punjab",
-            "shimla": "himachal pradesh", "manali": "himachal pradesh", "ooty": "tamil nadu",
-            "mysuru": "karnataka", "patna": "bihar", "bhopal": "madhya pradesh",
-            "indore": "madhya pradesh", "lucknow": "uttar pradesh", "surat": "gujarat",
-            "nagpur": "maharashtra", "visakhapatnam": "andhra pradesh", "vadodara": "gujarat",
-            "coimbatore": "tamil nadu"
+        // Embedded City Database matching your JSON file directly
+        const EMBEDDED_CITY_DATABASE = {
+            "Mumbai": {"city": "Mumbai", "state": " Maharashtra", "country": "IN", "countryName": " India", "loc_id": "357389", "loc_name": "Mumbai", "loc_type": "City", "lat": "19.075986", "lon": "72.877663"},
+            "Delhi": {"city": "New Delhi", "state": " National Capital Territory of Delhi", "country": "IN", "countryName": " India", "loc_id": "227760", "loc_name": "New Delhi", "loc_type": "City", "lat": "28.613939", "lon": "77.209023"},
+            "Bangalore": {"city": "Bengaluru", "state": " Karnataka", "country": "IN", "countryName": " India", "loc_id": "341153", "loc_name": "Bengaluru", "loc_type": "City", "lat": "12.971599", "lon": "77.594566"},
+            "Hyderabad": {"city": "Hyderabad", "state": " Telangana", "country": "IN", "countryName": " India", "loc_id": "227706", "loc_name": "Hyderabad", "loc_type": "City", "lat": "17.385044", "lon": "78.486671"},
+            "Chennai": {"city": "Chennai", "state": "Tamil Nadu", "country": "IN", "countryName": "India", "loc_id": "228269", "loc_name": "Chennai", "loc_type": "City", "lat": "13.08268", "lon": "80.270721"},
+            "Jaipur": {"city": "Jaipur", "state": " Rajasthan", "country": "IN", "countryName": " India", "loc_id": "227736", "loc_name": "Jaipur", "loc_type": "City", "lat": "26.912428", "lon": "75.78727"},
+            "Udaipur": {"city": "Udaipur", "state": " Rajasthan", "country": "IN", "countryName": " India", "loc_id": "246754", "loc_name": "Udaipur", "loc_type": "City", "lat": "24.58163", "lon": "73.68771"},
+            "Pune": {"city": "Pune", "state": " Maharashtra", "country": "IN", "countryName": " India", "loc_id": "328605", "loc_name": "Pune", "loc_type": "City", "lat": "18.520433", "lon": "73.856737"},
+            "Kolkata": {"city": "Kolkata", "state": " West Bengal", "country": "IN", "countryName": " India", "loc_id": "360530", "loc_name": "Kolkata", "loc_type": "City", "lat": "22.572645", "lon": "88.363892"},
+            "Varanasi": {"city": "Varanasi", "state": " Uttar Pradesh", "country": "IN", "countryName": " India", "loc_id": "246776", "loc_name": "Varanasi", "loc_type": "City", "lat": "25.317646", "lon": "82.973915"},
+            "Ahmedabad": {"city": "Ahmedabad", "state": " Gujarat", "country": "IN", "countryName": " India", "loc_id": "246774", "loc_name": "Ahmedabad", "loc_type": "City", "lat": "23.022511", "lon": "72.571353"},
+            "Gurugram": {"city": "Gurugram", "state": " Haryana", "country": "IN", "countryName": " India", "loc_id": "330286", "loc_name": "Gurugram", "loc_type": "City", "lat": "28.459501", "lon": "77.02663"},
+            "Lonavala": {"city": "Lonavala", "state": " Maharashtra", "country": "IN", "countryName": " India", "loc_id": "333732", "loc_name": "Lonavala", "loc_type": "City", "lat": "18.754618", "lon": "73.406235"},
+            "Candolim": {"city": "Candolim", "state": " Goa", "country": "IN", "countryName": " India", "loc_id": "328595", "loc_name": "Candolim", "loc_type": "City", "lat": "15.514526", "lon": "73.76838"},
+            "Indore": {"city": "Indore", "state": " Madhya Pradesh", "country": "IN", "countryName": " India", "loc_id": "227710", "loc_name": "Indore", "loc_type": "City", "lat": "22.719568", "lon": "75.857727"},
+            "Mysore": {"city": "Mysore", "state": " Karnataka", "country": "IN", "countryName": " India", "loc_id": "364120", "loc_name": "Mysore", "loc_type": "City", "lat": "12.295811", "lon": "76.639381"},
+            "Lucknow": {"city": "Lucknow", "state": " Uttar Pradesh", "country": "IN", "countryName": " India", "loc_id": "228250", "loc_name": "Lucknow", "loc_type": "City", "lat": "26.846693", "lon": "80.946167"},
+            "Pondicherry": {"city": "Puducherry", "state": " Puducherry", "country": "IN", "countryName": " India", "loc_id": "334134", "loc_name": "Puducherry", "loc_type": "City", "lat": "11.95066", "lon": "79.791284"},
+            "Kochi": {"city": "Kochi", "state": " Kerala", "country": "IN", "countryName": " India", "loc_id": "329184", "loc_name": "Kochi", "loc_type": "City", "lat": "9.931233", "lon": "76.267304"},
+            "Calangute": {"city": "Calangute", "state": " Goa", "country": "IN", "countryName": " India", "loc_id": "330255", "loc_name": "Calangute", "loc_type": "City", "lat": "15.531124", "lon": "73.762497"},
+            "Munnar": {"city": "Munnar", "state": " Kerala", "country": "IN", "countryName": " India", "loc_id": "328949", "loc_name": "Munnar", "loc_type": "City", "lat": "10.088933", "lon": "77.059525"},
+            "Puri": {"city": "Puri", "state": " Odisha", "country": "IN", "countryName": " India", "loc_id": "328623", "loc_name": "Puri", "loc_type": "City", "lat": "19.813383", "lon": "85.831467"},
+            "Ooty": {"city": "Ooty", "state": " Tamil Nadu", "country": "IN", "countryName": " India", "loc_id": "343016", "loc_name": "Ooty", "loc_type": "City", "lat": "11.406775", "lon": "76.703423"},
+            "Nashik": {"city": "Nashik", "state": " Maharashtra", "country": "IN", "countryName": " India", "loc_id": "360531", "loc_name": "Nashik", "loc_type": "City", "lat": "19.997454", "lon": "73.789803"},
+            "Agra": {"city": "Agra", "state": " Uttar Pradesh", "country": "IN", "countryName": " India", "loc_id": "246663", "loc_name": "Agra", "loc_type": "City", "lat": "27.176665", "lon": "78.008071"},
+            "Visakhapatnam": {"city": "Visakhapatnam", "state": " Andhra Pradesh", "country": "IN", "countryName": " India", "loc_id": "246781", "loc_name": "Visakhapatnam", "loc_type": "City", "lat": "17.686815", "lon": "83.218483"},
+            "Mussoorie": {"city": "Mussoorie", "state": " Uttarakhand", "country": "IN", "countryName": " India", "loc_id": "327891", "loc_name": "Mussoorie", "loc_type": "City", "lat": "30.459909", "lon": "78.066399"},
+            "Chandigarh": {"city": "Chandigarh", "state": " Chandigarh", "country": "IN", "countryName": " India", "loc_id": "334042", "loc_name": "Chandigarh", "loc_type": "City", "lat": "30.733315", "lon": "76.779419"},
+            "Amritsar": {"city": "Amritsar", "state": " Punjab", "country": "IN", "countryName": " India", "loc_id": "246843", "loc_name": "Amritsar", "loc_type": "City", "lat": "31.633985", "lon": "74.872259"},
+            "Mahabaleshwar": {"city": "Mahabaleshwar", "state": " Maharashtra", "country": "IN", "countryName": " India", "loc_id": "333615", "loc_name": "Mahabaleshwar", "loc_type": "City", "lat": "17.92644", "lon": "73.654032"},
+            "Noida": {"city": "Noida", "state": " Uttar Pradesh", "country": "IN", "countryName": " India", "loc_id": "327747", "loc_name": "Noida", "loc_type": "City", "lat": "28.535517", "lon": "77.391029"},
+            "Rishikesh": {"city": "Rishikesh", "state": " Uttarakhand", "country": "IN", "countryName": " India", "loc_id": "329199", "loc_name": "Rishikesh", "loc_type": "City", "lat": "30.086927", "lon": "78.267609"},
+            "Panaji": {"city": "Panaji", "state": " Goa", "country": "IN", "countryName": " India", "loc_id": "328649", "loc_name": "Panaji", "loc_type": "City", "lat": "15.498725", "lon": "73.827812"},
+            "Dehradun": {"city": "Dehradun", "state": " Uttarakhand", "country": "IN", "countryName": " India", "loc_id": "358325", "loc_name": "Dehradun", "loc_type": "City", "lat": "30.316494", "lon": "78.032188"},
+            "Madurai": {"city": "Madurai", "state": " Tamil Nadu", "country": "IN", "countryName": " India", "loc_id": "227729", "loc_name": "Madurai", "loc_type": "City", "lat": "9.925201", "lon": "78.119774"},
+            "Shimla": {"city": "Shimla", "state": " Himachal Pradesh", "country": "IN", "countryName": " India", "loc_id": "246679", "loc_name": "Shimla", "loc_type": "City", "lat": "31.104116", "lon": "77.17164"},
+            "New Delhi": {"city": "New Delhi", "state": " National Capital Territory of Delhi", "country": "IN", "countryName": " India", "loc_id": "227760", "loc_name": "New Delhi", "loc_type": "City", "lat": "28.613939", "lon": "77.209023"},
+            "Baga": {"city": "Baga", "state": " Goa", "country": "IN", "countryName": " India", "loc_id": "334261", "loc_name": "Baga", "loc_type": "City", "lat": "15.55705", "lon": "73.754852"},
+            "Patna": {"city": "Patna", "state": " Bihar", "country": "IN", "countryName": " India", "loc_id": "228349", "loc_name": "Patna", "loc_type": "City", "lat": "25.594095", "lon": "85.137566"},
+            "Manali": {"city": "Manali", "state": " Himachal Pradesh", "country": "IN", "countryName": " India", "loc_id": "334045", "loc_name": "Manali", "loc_type": "City", "lat": "32.243881", "lon": "77.189292"},
+            "Bhopal": {"city": "Bhopal", "state": " Madhya Pradesh", "country": "IN", "countryName": " India", "loc_id": "333920", "loc_name": "Bhopal", "loc_type": "City", "lat": "23.259929", "lon": "77.412613"},
+            "Goa": {"city": "Goa", "state": "Goa", "country": "IN", "countryName": " India", "loc_id": "328959", "loc_name": "Goa", "loc_type": "State", "lat": "15.498995", "lon": "73.828214"},
+            "Surat": {"city": "Surat", "state": " Gujarat", "country": "IN", "countryName": " India", "loc_id": "246688", "loc_name": "Surat", "loc_type": "City", "lat": "21.170248", "lon": "72.831063"},
+            "London": {"city": "London", "state": " England", "country": "GB", "countryName": " United Kingdom", "loc_id": "437162", "loc_name": "London", "loc_type": "City", "lat": "51.50746", "lon": "-0.127673"},
+            "Paris": {"city": "Paris", "state": "Paris", "country": "FR", "countryName": " France", "loc_id": "437227", "loc_name": "Paris", "loc_type": "City", "lat": "48.853564", "lon": "2.348095"},
+            "New York": {"city": "New York", "state": " New York", "country": "US", "countryName": " United States of America", "loc_id": "4349", "loc_name": "New York", "loc_type": "City", "lat": "40.712843", "lon": "-74.005966"},
+            "Dubai": {"city": "Dubai", "state": " Dubai", "country": "AE", "countryName": " United Arab Emirates", "loc_id": "221688", "loc_name": "Dubai", "loc_type": "City", "lat": "25.27063", "lon": "55.30037"},
+            "Singapore": {"city": "Singapore", "state": " Singapore", "country": "SG", "countryName": " Singapore", "loc_id": "228221", "loc_name": "Singapore", "loc_type": "City", "lat": "1.3521", "lon": "103.8198"},
+            "Bangkok": {"city": "Bangkok", "state": " Bangkok Province", "country": "TH", "countryName": " Thailand", "loc_id": "227782", "loc_name": "Bangkok", "loc_type": "City", "lat": "13.7475", "lon": "100.53601"},
+            "Tokyo": {"city": "Tokyo", "state": " Tokyo Prefecture", "country": "JP", "countryName": " Japan", "loc_id": "246750", "loc_name": "Tokyo", "loc_type": "City", "lat": "35.681143", "lon": "139.767208"},
+            "Coimbatore": {"city": "Coimbatore (CJB)", "state": "Coimbatore", "country": "IN", "countryName": " India (CJB)", "loc_id": "328095", "loc_name": "Coimbatore (CJB)", "loc_type": "Airport", "lat": "11.030958", "lon": "77.038686"}
         };
 
         const SUP_COLORS = {
@@ -494,7 +526,7 @@
                         rawPrices: prices
                     });
 
-                    // UPDATED WIN RATE LOGIC: Exclusive supply counts as a win!
+                    // WIN RATE LOGIC: Exclusive supply counts as a win!
                     if (prices.cleartrip) {
                         totalValid++;
                         cStats[qCity].totalValid++;
@@ -503,8 +535,7 @@
                         let isCtWin = false;
 
                         if (compPrices.length === 0) {
-                            // Exclusive supply: Cleartrip is sole provider, wins by default
-                            isCtWin = true;
+                            isCtWin = true; // Exclusive supply
                         } else {
                             const minComp = Math.min(...compPrices);
                             if (prices.cleartrip <= minComp) {
@@ -890,22 +921,9 @@
 
         const DashboardContainer = ({ onLock }) => {
             const [searchMode, setSearchMode] = useState('single');
-            const [citiesList, setCitiesList] = useState(DEFAULT_CITIES);
+            // Take city suggestions directly from the embedded database keys!
+            const [citiesList, setCitiesList] = useState(() => Object.keys(EMBEDDED_CITY_DATABASE).map(k => k.toLowerCase()));
             const [tabStatus, setTabStatus] = useState({ single: 'idle', bulk: 'idle' });
-
-            useEffect(() => {
-                fetch('city_database.json')
-                    .then(res => res.json())
-                    .then(data => {
-                        if (Array.isArray(data)) {
-                            setCitiesList(data.map(k => String(k).toLowerCase()));
-                        } else if (data && typeof data === 'object') {
-                            const keys = Object.keys(data);
-                            if (keys.length > 0) setCitiesList(keys.map(k => String(k).toLowerCase()));
-                        }
-                    })
-                    .catch(err => console.log("using default city list fallback"));
-            }, []);
 
             return (
                 <div className="pb-20 relative min-h-screen">
